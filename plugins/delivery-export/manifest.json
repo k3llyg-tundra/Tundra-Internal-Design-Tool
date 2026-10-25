@@ -1,0 +1,9 @@
+{
+  "name": "Tundra Delivery Export - GIF / NVS / Promo",
+  "id": "1836280828202608360",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "permissions": ["currentuser"]
+}

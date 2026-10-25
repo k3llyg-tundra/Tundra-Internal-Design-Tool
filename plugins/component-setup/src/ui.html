@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: light dark; font: 12px/1.4 Inter, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--figma-color-text, #242424); background: var(--figma-color-bg, #fff); }
+    main { padding: 18px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 13px; margin: 0; }
+    p { color: var(--figma-color-text-secondary, #666); margin: 4px 0 16px; }
+    label { display: grid; gap: 5px; font-weight: 600; }
+    input { width: 100%; height: 34px; padding: 7px 9px; border: 1px solid var(--figma-color-border, #ccc); border-radius: 6px; color: inherit; background: var(--figma-color-bg, #fff); font: inherit; }
+    input:focus, textarea:focus { outline: 2px solid #8fb7ff; outline-offset: 1px; }
+    textarea { width: 100%; min-height: 62px; padding: 7px 9px; border: 1px solid var(--figma-color-border, #ccc); border-radius: 6px; color: inherit; background: var(--figma-color-bg, #fff); font: inherit; }
+    button { min-height: 32px; padding: 6px 10px; border: 1px solid var(--figma-color-border, #ccc); border-radius: 6px; background: var(--figma-color-bg, #fff); color: inherit; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    .primary { background: #1769e0; color: #fff; border-color: #1769e0; }
+    .toolbar, .asset-head, .item-head, .actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .toolbar { margin: 14px 0; }
+    .preset-bar { padding: 12px 0; margin-top: 8px; }
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .presets button { flex: 1; white-space: nowrap; }
+    .deliverable { margin: 8px 0; }
+    button:focus-visible, summary:focus-visible { outline: 2px solid #1769e0; outline-offset: 3px; }
+    .asset { border: 1px solid var(--figma-color-border, #ddd); border-radius: 9px; padding: 12px; margin: 12px 0; }
+    summary > span { flex: 1; }
+    .deliverable > summary { display: flex; align-items: center; gap: 10px; }
+    .deliverable > summary::before { content: "▸"; }
+    .deliverable[open] > summary::before { content: "▾"; }
+    .deliverable > summary button { flex-shrink: 0; }
+    summary { cursor: pointer; font-weight: 700; padding: 6px 0; overflow-wrap: anywhere; }
+    details[open] > summary { margin-bottom: 12px; }
+    .actions { position: sticky; bottom: 0; background: var(--figma-color-bg, #fff); padding: 10px 0; }
+    select { width: 100%; padding: 8px; margin-bottom: 10px; background: var(--figma-color-bg, #fff); color: inherit; border: 1px solid var(--figma-color-border, #ccc); border-radius: 6px; }
+    .group-panel { margin: 12px 0; padding: 10px; border: 1px solid var(--figma-color-border, #ddd); border-radius: 8px; }
+    .asset-head { margin-bottom: 10px; }
+    .campaign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .span-two { grid-column: span 2; }
+    .placement { margin-top: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 8px; }
+    .item { padding: 9px; margin-top: 8px; background: var(--figma-color-bg-secondary, #f6f6f6); border-radius: 7px; }
+    .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+    .item-grid .full { grid-column: span 2; }
+    .muted, small { color: var(--figma-color-text-secondary, #666); }
+    .preview { margin: 15px 0; padding: 12px; border: 1px solid var(--figma-color-border, #ddd); border-radius: 8px; }
+    .preview ul { padding-left: 16px; max-height: 130px; overflow: auto; overflow-wrap: anywhere; }
+    .preview li { margin: 5px 0; }
+    .error { color: #bc3434; white-space: pre-line; }
+    .status { min-height: 30px; padding: 9px 0; }
+    .actions button { flex: 1; }
+  </style>
+</head>
+<body><main>
+  <h1>Component setup</h1>
+  <p>Generate blank components with export naming paths, then sync names after resizing in Figma.</p>
+  <details class="asset"><summary>Campaign details</summary>
+    <div class="asset-head"><h2>Campaign from Figma file</h2><button id="use-file-title" type="button">Use file title</button></div>
+    <small id="file-title"></small>
+    <div class="campaign-grid">
+      <label>Ticket number<input id="ticket" placeholder="NIKRA0990" /></label>
+      <label>Season / year<input id="season-year" placeholder="FA26" /></label>
+      <label class="span-two">Campaign title<input id="campaign" placeholder="NikeSKIMS Drop 2" /></label>
+    </div>
+  </details>
+  <label>Default folder path<input id="path" placeholder="Meta / Brand Social" /></label>
+  <label class="placement">Extra naming label (optional)<input id="placement" placeholder="e.g. Brand Social — leave blank if unused" /></label>
+  <div class="toolbar"><small id="page"></small><button id="apply-path" type="button">Apply path to all</button></div>
+  <section class="preset-bar" aria-label="Add deliverable">
+    <h2>Add deliverable</h2>
+    <div class="presets"><button id="add-carousel" type="button">+ In-feed carousel</button><button id="add-story" type="button">+ IG Story</button><button id="add-asset" type="button">+ Custom</button></div>
+  </section>
+  <div id="assets"></div>
+  <section class="preview"><h2>Preview <span id="count"></span></h2><div id="errors" class="error"></div><ul id="names"></ul></section>
+  <div class="actions"><button id="sync" type="button">Sync dimensions</button><button class="primary" id="generate" type="button">Generate all deliverables</button></div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+</main><!-- APP_SCRIPT --></body></html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{font:300 12px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#000;background:#fff;color-scheme:light;--green:#15372c;--hover:#008060;--sage:#c8d9bc;--line:#999}*{box-sizing:border-box}body{margin:0;padding:24px}h1{font-size:32px;line-height:40px;font-weight:200;margin:0 0 4px}h2{font-size:18px;font-weight:300;margin:0}p{margin:0}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--hover);outline-offset:3px}.intro{font-size:13px}.selection{border-top:2px solid var(--sage);border-bottom:2px solid var(--sage);padding:12px 0;margin:20px 0}.selection strong{display:block;font-weight:600}.names{color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}.dimensions{display:grid;grid-template-columns:1fr 16px 1fr;gap:8px;align-items:end}.times{padding-bottom:12px;text-align:center}.field{display:flex;align-items:center;border:1px solid var(--line);padding-right:12px}.field:focus-within{outline:2px solid var(--hover);outline-offset:1px}input[type=number],input[type=text]{width:100%;min-width:0;border:0;background:transparent;color:inherit;padding:10px 12px;outline:0}input[type=number]{font-size:16px}.unit{color:#555}.presets{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}.preset{background:white;border:2px solid var(--sage);border-radius:16px;padding:2px 10px;line-height:24px;font-weight:300}.preset:hover,.preset[aria-pressed=true]{background:var(--sage)}.text-button{background:none;border:0;padding:4px 0;color:var(--green);text-decoration:underline;text-underline-offset:3px}.preset-tools{margin-bottom:16px}.option{display:flex;gap:12px;align-items:center;font-size:13px}.option input{appearance:none;flex:none;width:16px;height:16px;border:1px solid var(--line);margin:0;background:white}.option input:checked{background:white url('data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJCcmFuZCAmIzM4OyBJY29uIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTIxLjAyIDUuODRMOC45NyAxNy44NEwyLjk4IDExLjgzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZT0iYmxhY2siLz4KPC9nPgo8L3N2Zz4K') center/12px 12px no-repeat}.hint{font-size:12px;color:#555;line-height:18px;margin:4px 0 16px 28px}.primary{width:100%;min-height:48px;padding:16px 20px;border:1px solid var(--green);background:var(--green);color:white;font-size:14px;line-height:16px;font-weight:600}.primary:hover:not(:disabled){background:var(--hover);border-color:var(--hover)}#status{font-size:12px;line-height:18px;margin-top:10px;color:var(--green);overflow-wrap:anywhere}#status:empty{display:none}#status[data-error=true],#preset-error{color:#a02121}.export-area{border-top:2px solid var(--sage);margin-top:20px;padding-top:16px}.export-area h2{margin-bottom:12px}.export{margin-top:12px;background:white;color:var(--green)}.export:hover:not(:disabled){background:var(--green);color:white}.export-hint{margin:6px 0 0;color:#555;font-size:11px}.editor{border:1px solid var(--sage);padding:12px;margin:8px 0 16px}.editor[hidden]{display:none}.editor p{color:#555;margin:4px 0 12px}.preset-row{display:grid;grid-template-columns:18px 1fr 1fr;gap:8px;align-items:center;margin-top:8px}.preset-row input[type=number]{border:1px solid var(--line);font-size:13px;padding:8px;width:100%}.preset-row input[type=radio]{accent-color:var(--green);margin:0}.editor-actions{display:flex;gap:16px;align-items:center;margin-top:12px}.small{font-size:12px;min-height:36px;width:auto;padding:10px 16px}.editor-heading{display:grid;grid-template-columns:18px 1fr 1fr;gap:8px;font-size:11px}.editor-heading span:first-child{font-size:0}.editor-heading span:first-child:after{content:'●';font-size:11px}#preset-error{margin-top:8px}.export-area input{font-size:12px}
+</style>
+</head>
+<body>
+<h1>Bulk Resize</h1><p class="intro">Resize selected frames and components together.</p>
+<div class="selection"><strong id="count">Select layers to resize</strong><p class="names" id="names">Frames, components, and instances</p></div>
+<form id="form">
+<div class="dimensions"><label><span class="label">Width</span><span class="field"><input id="width" type="number" min="1" max="100000" step="any" value="2048" required><span class="unit">px</span></span></label><span class="times">×</span><label><span class="label">Height</span><span class="field"><input id="height" type="number" min="1" max="100000" step="any" value="2048" required><span class="unit">px</span></span></label></div>
+<div class="presets" id="presets" aria-label="Size presets"></div>
+<div class="preset-tools"><button class="text-button" id="edit-presets" type="button" aria-expanded="false" aria-controls="preset-editor">Edit presets</button></div>
+<section class="editor" id="preset-editor" hidden aria-label="Edit size presets">
+<h2>Size presets</h2><p>Edit sizes. Choose your opening default.</p>
+<div class="editor-heading"><span>Default</span><span>Width · px</span><span>Height · px</span></div>
+<div id="preset-rows"></div><p id="preset-error" role="alert"></p>
+<div class="editor-actions"><button type="button" class="primary small" id="save-presets">Save</button><button type="button" class="text-button" id="cancel-presets">Cancel</button><button type="button" class="text-button" id="reset-presets">Reset</button></div>
+</section>
+<label class="option"><input id="scale" type="checkbox" checked>Scale artwork to fit</label><p class="hint" id="hint">Keeps proportions. Other shapes may leave space.</p>
+<button class="primary" id="resize" disabled>Resize selection</button>
+<p id="status" role="status" aria-live="polite"></p>
+</form>
+<section class="export-area"><h2>Export PNG</h2><label><span class="label">Filename prefix</span><span class="field"><input id="prefix" type="text" aria-label="Export filename prefix" value="[NIKRA1027] HO26 NVS Always On Image Library"></span></label>
+<button class="primary export" id="export" disabled>Export PNG</button><p class="export-hint">Library images only · current size · ZIP download</p></section>
+<!-- FFLATE_VENDOR -->
+<script>
+const $=id=>document.getElementById(id);let count=0,exportCount=0,busy=false,operation='',files=[],exportStarted=0,progressText='',renderMs=0;
+const seconds=ms=>(ms/1000).toFixed(1)+'s';
+setInterval(()=>{if(busy&&operation==='export')$('status').textContent=progressText+' · '+seconds(performance.now()-exportStarted)+' elapsed'},1000);
+function send(message){parent.postMessage({pluginMessage:message},'*')}
+function update(){ $('export').disabled=busy||exportCount===0;$('export').textContent=busy&&operation==='export'?'Exporting…':`Export PNG${exportCount?' ('+exportCount+')':''}`; $('resize').disabled=busy||count===0;$('resize').textContent=busy&&operation==='resize'?'Resizing…':`Resize ${count||''} ${count===1?'layer':'layers'}`;}
+const defaults=[{width:1080,height:1080},{width:2048,height:2048},{width:1080,height:1920}];
+let presets=defaults.map(p=>({...p})),defaultPreset=1,settingsReady=false;
+function renderPresets(){
+ $('presets').replaceChildren();presets.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='preset';b.textContent=`${p.width} × ${p.height}`;b.title=i===defaultPreset?'Opening default':'';b.setAttribute('aria-pressed',String(Number($('width').value)===p.width&&Number($('height').value)===p.height));b.addEventListener('click',()=>{$('width').value=p.width;$('height').value=p.height;renderPresets()});$('presets').appendChild(b)});
+}
+function editorRows(values,index){$('preset-rows').replaceChildren();values.forEach((p,i)=>{const row=document.createElement('div');row.className='preset-row';const radio=document.createElement('input');radio.type='radio';radio.name='default-preset';radio.value=i;radio.checked=i===index;radio.setAttribute('aria-label',`Use preset ${i+1} as default`);row.appendChild(radio);['width','height'].forEach(key=>{const input=document.createElement('input');input.type='number';input.min='1';input.max='100000';input.step='any';input.required=true;input.value=p[key];input.setAttribute('aria-label',`Preset ${i+1} ${key}`);row.appendChild(input)});$('preset-rows').appendChild(row)})}
+function closeEditor(){$('preset-rows').replaceChildren();$('preset-editor').hidden=true;$('edit-presets').setAttribute('aria-expanded','false');$('edit-presets').focus()}
+$('edit-presets').addEventListener('click',()=>{if(!$('preset-editor').hidden){closeEditor();return}editorRows(presets,defaultPreset);$('preset-error').textContent='';$('preset-editor').hidden=false;$('edit-presets').setAttribute('aria-expanded','true');$('preset-rows').querySelector('input[type=number]').focus()});
+$('cancel-presets').addEventListener('click',closeEditor);
+$('reset-presets').addEventListener('click',()=>editorRows(defaults,1));
+$('save-presets').addEventListener('click',()=>{
+ const rows=[...$('preset-rows').children];const inputs=rows.flatMap(row=>[...row.querySelectorAll('input[type=number]')]);
+ if(inputs.some(input=>!input.reportValidity()))return;
+ const next=rows.map(row=>{const fields=row.querySelectorAll('input[type=number]');return {width:Number(fields[0].value),height:Number(fields[1].value)}});
+ const index=Number($('preset-rows').querySelector('input[type=radio]:checked').value);
+ $('save-presets').disabled=true;send({type:'save-presets',presets:next,defaultPreset:index});
+});
+['width','height'].forEach(id=>$(id).addEventListener('input',renderPresets));
+$('prefix').addEventListener('change',()=>{if(settingsReady)send({type:'save-prefix',prefix:$('prefix').value})});
+renderPresets();
+$('scale').addEventListener('change',()=>{$('hint').textContent=$('scale').checked?'Keeps proportions. Other shapes may leave space.':'Uses existing constraints and auto layout.'});
+$('form').addEventListener('submit',event=>{event.preventDefault();if(busy||!count||!$('form').reportValidity())return;busy=true;operation='resize';update();$('status').textContent='Resizing selected layers…';$('status').dataset.error='false';send({type:'resize',width:Number($('width').value),height:Number($('height').value),scale:$('scale').checked})});
+window.addEventListener('message',event=>{const m=event.data.pluginMessage;if(!m)return;
+if(m.type==='settings'){presets=m.presets;defaultPreset=m.defaultPreset;$('width').value=presets[defaultPreset].width;$('height').value=presets[defaultPreset].height;if(typeof m.prefix==='string')$('prefix').value=m.prefix;settingsReady=true;renderPresets()}
+if(m.type==='presets-saved'){$('save-presets').disabled=false;if(m.error){$('preset-error').textContent=m.text;return}presets=m.presets;defaultPreset=m.defaultPreset;$('width').value=presets[defaultPreset].width;$('height').value=presets[defaultPreset].height;renderPresets();closeEditor();$('status').textContent='Presets saved.';$('status').dataset.error='false'}
+if(m.type==='selection'){count=m.count;exportCount=m.exportCount;$('count').textContent=m.total?`${count} ${count===1?'layer':'layers'} ready to resize`:'Select layers to begin';$('names').textContent=m.total?m.names.join(', ')+(m.total>3?'…':''):'Frames, components, and instances';update()}if(m.type==='progress'){progressText=m.text;$('status').textContent=m.text}if(m.type==='export-file'){files.push({name:m.path,bytes:m.bytes instanceof Uint8Array?m.bytes:new Uint8Array(m.bytes)});renderMs+=m.renderMs||0;progressText=`Rendered ${files.length} · last frame ${seconds(m.renderMs||0)}`}if(m.type==='export-done'){finishExport(m)}if(m.type==='result'){busy=false;operation='';$('status').textContent=m.text;$('status').dataset.error=String(m.error);update()}});
+
+// fflate 0.8.3, MIT. Pass PNG bytes through without recompression.
+function zip(entries){
+ const chunks=[];let finished=false;
+ const archive=new fflate.Zip((error,data,final)=>{if(error)throw error;chunks.push(data);if(final)finished=true});
+ for(const file of entries){const entry=new fflate.ZipPassThrough(file.name);archive.add(entry);entry.push(file.bytes,true)}
+ archive.end();
+ if(!finished)throw new Error('ZIP did not finish');
+ return new Blob(chunks,{type:'application/zip'});
+}
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+async function finishExport(message){
+ try{
+  progressText='Preparing download…';$('status').textContent=progressText;
+  await new Promise(resolve=>setTimeout(resolve,0));
+  const packageStarted=performance.now();
+  const used=new Set();for(const file of files){
+   const base=file.name.replace(/\.png$/i,'');let name=base+'.png',n=2;
+   while(used.has(name.toLowerCase()))name=`${base} (${n++}).png`;
+   used.add(name.toLowerCase());file.name=name;
+  }
+  if(files.length)download(zip(files),'Always On Image Library.zip');
+  const packageMs=performance.now()-packageStarted;
+  $('status').textContent=message.text+` Render: ${seconds(renderMs)} · download preparation: ${seconds(packageMs)} · total: ${seconds(performance.now()-exportStarted)}.`;$('status').dataset.error=String(message.count===0);
+ }catch(error){$('status').textContent='Could not prepare download: '+error.message;$('status').dataset.error='true'}
+ finally{files=[];busy=false;operation='';update()}
+}
+$('export').addEventListener('click',()=>{if(busy||!exportCount)return;files=[];renderMs=0;exportStarted=performance.now();progressText='Preparing PNG export…';busy=true;operation='export';update();$('status').textContent='Preparing PNG export…';$('status').dataset.error='false';send({type:'export',prefix:$('prefix').value})});
+send({type:'ready'});
+</script>
+</body></html>

@@ -1,0 +1,10 @@
+import { build } from 'esbuild';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+process.chdir(fileURLToPath(new URL('.', import.meta.url)));
+await mkdir('dist', { recursive: true });
+await build({ entryPoints: ['src/code.ts'], outfile: 'dist/code.js', bundle: true, target: 'es2020', format: 'iife' });
+const vendor = await readFile('src/vendor/fflate-0.8.3.js', 'utf8');
+const ui = (await readFile('src/ui.html', 'utf8')).replace('<!-- FFLATE_VENDOR -->', () => `<script>${vendor}</script>`);
+await writeFile('dist/ui.html', ui);
+console.log('Built Bulk Resize. Import manifest.json from this plugin directory in Figma.');

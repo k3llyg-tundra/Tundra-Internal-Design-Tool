@@ -1,0 +1,2501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Figma Export Plugin</title>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0EEEB;--sur:#FFFFFF;--sur2:#F5EFE2;--bdr:#15372C;
+  --acc:#008060;--acc2:#15372C;--grn:#008060;--red:#15372C;--amb:#15372C;
+  --txt:#000000;--mut:#4D4D4D;
+  --fn:Arial,Helvetica,sans-serif;--fm:'SF Mono','Menlo',monospace;
+}
+body{font-family:var(--fn);background:var(--bg);color:var(--txt);font-size:12px;line-height:1.5}
+.hdr{padding:16px;border-bottom:1px solid var(--bdr);background:#15372C;color:#fff;display:flex;align-items:center;gap:12px}
+.logo{width:auto;height:auto;background:none;border-radius:0;display:block;font-size:18px;font-weight:800;letter-spacing:-1px;color:#fff;flex-shrink:0}
+.ht{font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}.hs{font-size:10px;color:#C8D9BC}
+.tabs{display:flex;background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 16px}
+.tab{padding:11px 12px 9px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;user-select:none}
+.tab.on{color:#15372C;border-color:#008060}
+.pnl{display:none;padding:13px 16px 85px}
+.pnl.on{display:block}
+.sec{margin-bottom:13px}
+.lbl{font-size:9px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.hint{font-size:10px;color:var(--mut);margin-top:3px}
+input[type=text],select{width:100%;background:var(--sur);border:1px solid #999999;border-radius:0;color:var(--txt);font-family:var(--fn);font-size:11px;padding:8px 9px;outline:none}
+input[type=text]:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(0,128,96,.18)}
+input::placeholder{color:var(--mut)}
+select option{background:var(--sur2)}
+select:disabled{opacity:.4}
+.row{display:flex;gap:7px}
+.row input,.row select{flex:1}
+.pg{display:flex;flex-direction:column;gap:4px}
+.scale-info{background:var(--sur);border:1px solid #999999;border-radius:0;padding:10px 12px;margin-bottom:8px}
+.scale-row{display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:3px 0}
+.scale-row:not(:last-child){border-bottom:1px solid var(--bdr);margin-bottom:4px;padding-bottom:7px}
+.scale-btns{display:flex;gap:4px;}
+.sc-btn{background:var(--sur2);color:var(--mut);border:1px solid var(--bdr);border-radius:4px;font-size:9px;padding:2px 7px;cursor:pointer;font-family:inherit;}
+.sc-btn.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+.scale-label{color:var(--mut)}
+.fmt-sel{background:var(--sur2);color:var(--txt);border:1px solid var(--bdr);border-radius:4px;font-size:9px;padding:1px 3px;cursor:pointer;margin-right:4px;}
+.fmt-sel:focus{outline:none;border-color:var(--acc);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 12px;border-radius:0;font-family:var(--fn);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border:none;user-select:none}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-pri{background:#111;color:#fff}
+.btn-pri:not(:disabled):hover{background:var(--acc)}
+.btn-sec{background:var(--sur2);color:var(--txt);border:1px solid var(--bdr)}
+.btn-gh{background:transparent;color:var(--mut);padding:4px 7px}
+.btn-full{width:100%}
+.btn-sm{padding:3px 8px;font-size:10px}
+.btn-ic{padding:4px 8px;font-size:12px}
+.co{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--sur);border:1px solid #999999;border-radius:0;cursor:pointer;margin-bottom:5px;user-select:none}
+.co.on{border-color:#008060;background:#C8D9BC}
+.cr{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--bdr);flex-shrink:0;margin-top:1px}
+.co.on .cr{border-color:var(--acc);background:var(--acc);box-shadow:inset 0 0 0 2px var(--sur2)}
+.co-t{font-size:11px;font-weight:600;margin-bottom:1px;color:var(--txt)}
+.co-d{font-size:10px;color:var(--mut);line-height:1.5}
+.fp{font-size:10px;font-family:var(--fm);color:#15372C;background:#FFFFFF;border:1px solid #15372C;border-radius:0;padding:7px 8px;margin-top:4px;word-break:break-all;line-height:1.7}
+.fp span{color:#15372C;font-weight:700}
+.fp-lbl{font-size:9px;color:var(--mut);margin-top:7px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.notice{padding:9px 10px;border-radius:0;font-size:10px;line-height:1.6;border:1px solid;margin-bottom:9px}
+.ni{background:#C8D9BC;border-color:var(--acc);color:#15372C}
+.ns{background:#C8D9BC;border-color:#008060;color:var(--grn)}
+.na{background:#F5EFE2;border-color:#AFFF00;color:#15372C}
+.nw{background:#F5EFE2;border-color:#15372C;color:var(--red)}
+.flist{display:flex;flex-direction:column;gap:2px}
+.fi{display:flex;align-items:center;gap:7px;padding:7px 8px;background:var(--sur);border:1px solid #999999;border-radius:0;cursor:pointer}
+.fi.sel{border-color:#008060;background:#C8D9BC}
+.fi.comp{border-color:#65FEB3}
+.fi.comp.sel{border-color:var(--grn);background:#C8D9BC}
+.fi.gif{border-color:#AFFF00}
+.fi.gif.sel{border-color:#15372C;background:#F5EFE2}
+.fchk{width:13px;height:13px;border:1.5px solid var(--bdr);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700}
+.fi.sel .fchk{background:var(--acc);border-color:var(--acc)}
+.fi.comp.sel .fchk{background:var(--grn);border-color:var(--grn)}
+.fi.gif.sel .fchk{background:#AFFF00;border-color:#AFFF00;color:#15372C}
+.fi-inf{flex:1;min-width:0}
+.fi-n{font-size:10px;font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
+.fi-p{font-size:9px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.fi-m{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.fi-d{font-size:9px;color:var(--mut);white-space:nowrap}
+.tag{font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px}
+.tc{background:#C8D9BC;color:#15372C;border:1px solid #008060}
+.tg{background:#F5EFE2;color:#15372C;border:1px solid #AFFF00}
+.sh{font-size:9px;font-weight:600;color:var(--mut);padding:5px 0 3px;margin-top:8px;border-bottom:1px solid var(--bdr);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.rb{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.bdg{font-size:9px;font-family:var(--fm);padding:2px 6px;border-radius:10px;background:#C8D9BC;color:#15372C}
+.prog-tr{width:100%;height:3px;background:var(--sur2);border-radius:3px;overflow:hidden;margin:7px 0}
+.prog-fi{height:100%;background:var(--acc);width:0%;transition:width .2s}
+.rlist{display:flex;flex-direction:column;gap:2px;max-height:140px;overflow-y:auto}
+.ri{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--sur2);border-radius:4px;font-size:10px;font-family:var(--fm)}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dg{background:var(--grn)}.dr{background:var(--red)}.da{background:var(--amb)}
+.ri-f{color:var(--mut);font-size:9px;flex-shrink:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ri-n{color:var(--txt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.footer{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:#15372C;border-top:1px solid var(--bdr);display:flex;gap:7px}
+#prog-blk{display:none;padding:9px 16px;border-top:1px solid var(--bdr);position:fixed;bottom:44px;left:0;right:0;background:var(--bg);z-index:50}
+#res-blk{display:none;padding:9px 16px;border-top:1px solid var(--bdr);position:fixed;bottom:44px;left:0;right:0;background:var(--bg);z-index:50}
+hr{border:none;border-top:1px solid var(--bdr);margin:11px 0}
+
+/* Neutral interface — intentionally brand-agnostic and content-first. */
+:root{
+  --bg:#f7f7f8;--sur:#ffffff;--sur2:#f3f4f6;--bdr:#e5e7eb;
+  --acc:#111827;--acc2:#111827;--grn:#10a37f;--red:#dc2626;--amb:#d97706;
+  --txt:#202123;--mut:#6b7280;
+  --fn:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+body{background:var(--bg);font-size:12px;color:var(--txt)}
+.hdr{padding:15px 16px;background:#fff;color:var(--txt);border-color:var(--bdr);gap:10px}
+.logo{width:28px;height:28px;border:1px solid #d1d5db;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;letter-spacing:0;color:#111827;background:#fff}
+.ht{font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}.hs{font-size:10px;color:var(--mut);margin-top:1px}
+.tabs{padding:0 12px;background:#fff;border-color:var(--bdr);gap:4px}
+.tab{padding:10px 9px 9px;font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;border-width:2px}
+.tab.on{color:var(--txt);border-color:var(--txt)}
+.pnl{padding:16px 16px 88px}.sec{margin-bottom:17px}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.02em;text-transform:none;color:#374151;margin-bottom:7px}
+.hint{font-size:10px;line-height:1.5;color:var(--mut);margin-top:5px}
+input[type=text],select{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11px;background:#fff}
+input[type=text]:focus,select:focus{border-color:#9ca3af;box-shadow:0 0 0 3px rgba(17,24,39,.07)}
+.scale-info,.co,.fi{border:1px solid var(--bdr);border-radius:10px;background:#fff}
+.scale-info{padding:8px 12px}.scale-row:not(:last-child){border-color:var(--bdr)}
+.sc-btn,.fmt-sel{border-color:#d1d5db;background:#fff;color:#4b5563;border-radius:6px}
+.sc-btn.active{background:#111827;color:#fff;border-color:#111827}
+.btn{border-radius:8px;font-size:10px;font-weight:600;letter-spacing:0;text-transform:none;padding:8px 12px}
+.btn-pri{background:#111827;color:#fff}.btn-pri:not(:disabled):hover{background:#000}
+.btn-sec{background:#fff;color:#374151;border:1px solid #d1d5db}.btn-gh{color:#6b7280}
+.co{padding:10px 11px}.co.on{border-color:#9ca3af;background:#f9fafb}.cr{border-color:#9ca3af}.co.on .cr{background:#111827;border-color:#111827;box-shadow:inset 0 0 0 2px #fff}
+.fp{font-family:var(--fm);color:#374151;background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:8px 9px}.fp span{color:#111827}
+.notice{border:1px solid var(--bdr);border-radius:10px;background:#fff;color:#4b5563;padding:10px 11px}.ni,.ns,.na,.nw{background:#fff;border-color:var(--bdr);color:#4b5563}
+.fi{padding:8px 9px}.fi.sel,.fi.comp.sel,.fi.gif.sel{border-color:#9ca3af;background:#f9fafb}.fi.comp,.fi.gif{border-color:var(--bdr)}
+.fchk{border-color:#9ca3af}.fi.sel .fchk,.fi.comp.sel .fchk,.fi.gif.sel .fchk{background:#111827;border-color:#111827;color:#fff}
+.tag{border-radius:5px}.tc,.tg{background:#f3f4f6;color:#4b5563;border:1px solid #d1d5db}
+.sh{border-color:var(--bdr);text-transform:none;letter-spacing:0}.bdg{background:#eef0f2;color:#4b5563}
+.footer{background:rgba(255,255,255,.96);border-color:var(--bdr);backdrop-filter:blur(8px)}
+#prog-blk,#res-blk{background:rgba(247,247,248,.98);border-color:var(--bdr)}
+.prog-fi{background:#10a37f}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">↗</div>
+  <div><div class="ht">Delivery Export <span style="color:var(--mut);font-size:10px">v49</span></div><div class="hs">Resolve, preview and export delivery files</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" data-tab="setup">Setup</div>
+  <div class="tab" id="tab-slices" data-tab="slices">Slices</div>
+  <div class="tab" data-tab="comps">Comps &amp; copy</div>
+  <div class="tab" data-tab="copy">Copy</div>
+</div>
+
+<!-- ══ SETUP ══ -->
+<div class="pnl on" id="pnl-setup">
+
+  <div class="sec">
+    <div class="lbl">File setup</div>
+    <select id="file-setup" onchange="onFileSetupChange()">
+      <option value="retention-offense">Retention Offense — Theme + Design Space</option>
+      <option value="targeted-comms">Multi-send - NVS + Similar File Structure (by Client RDs)</option>
+      <option value="nsp-store-appearance">NSP Store Appearance — CXP / Social / Email</option>
+      <option value="mid-season-promo">Mid Season Promo — Named source paths</option>
+    </select>
+    <div class="hint" id="file-setup-hint">Comps come from the selected Theme; slices come from its matching Design Space section.</div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Step 1 — Theme details</div>
+    <div class="row">
+      <input type="text" id="campaign-code" value="NIKRA0973" placeholder="e.g. NIKRA1003" style="max-width:140px" oninput="updatePreview()"/>
+      <input type="text" id="export-date" placeholder="DD-MM-YY" maxlength="8" oninput="updatePreview()"/>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Project name</div>
+    <input type="text" id="project-name" value="FA26 Retention Offense" placeholder="e.g. FA26 Retention Offense" oninput="updatePreview();updateBtn()"/>
+  </div>
+
+  <div class="sec">
+    <div class="lbl" id="step2-label">Step 2 — Theme</div>
+    <div class="pg">
+      <select id="campaign-page"><option value="">— Select page —</option></select>
+      <div class="hint" id="page-hint">Choose the Theme containing final Comps and tagged copy. Slices are automatically read from the matching Week section in 🎨 Design Space.</div>
+    </div>
+  </div>
+
+  <div class="sec" id="mid-season-phase-block" style="display:none">
+    <div class="lbl">Phase to export</div>
+    <input type="text" id="mid-season-phase" value="Phase 2" placeholder="e.g. Phase 2"/>
+    <div class="hint">Only this phase is scanned. This prevents large all-phase review pages from exhausting the Figma plugin runtime.</div>
+    <div class="lbl" style="margin-top:10px">Phase delivery name</div>
+    <input type="text" id="mid-season-folder-label" value="" placeholder="e.g. New Styles Added"/>
+    <div class="hint">Added after the phase in the ZIP root, for example “Phase 2 - New Styles Added”. Entering a complete “Phase 2 - …” label is also supported.</div>
+  </div>
+
+  <div class="sec" id="nsp-delivery-block" style="display:none">
+    <div class="lbl">Audience / store name</div>
+    <input type="text" id="nsp-store" value="Melbourne Central" placeholder="e.g. Melbourne Central" oninput="updatePreview()"/>
+    <div class="hint">Used as the only audience folder and audience name in NSP filenames.</div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Step 3 — Export settings</div>
+    <div class="scale-info">
+      <div class="scale-row" id="app-slices-format" style="display:none">
+        <span class="scale-label">Nike App Slice Format</span>
+        <div class="format-btns" data-key="appSlices">
+          <button class="sc-btn" data-val="PNG">PNG</button>
+          <button class="sc-btn" data-val="JPG">JPG</button>
+        </div>
+      </div>
+      <div class="scale-row" id="email-slices-format" style="display:none">
+        <span class="scale-label">Nike Email Slice Format</span>
+        <div class="format-btns" data-key="emailSlices">
+          <button class="sc-btn" data-val="PNG">PNG</button>
+          <button class="sc-btn" data-val="JPG">JPG</button>
+        </div>
+      </div>
+      <div class="scale-row" id="app-slices-scale">
+        <span class="scale-label">Nike App Slices</span>
+        <div class="scale-btns" data-key="appSlices">
+          <button class="sc-btn" data-val="1">@1x</button>
+          <button class="sc-btn" data-val="2">@2x</button>
+          <button class="sc-btn" data-val="3">@3x</button>
+        </div>
+      </div>
+      <div class="scale-row" id="email-slices-scale">
+        <span class="scale-label">Nike Email Slices</span>
+        <div class="scale-btns" data-key="emailSlices">
+          <button class="sc-btn" data-val="1">@1x</button>
+          <button class="sc-btn" data-val="2">@2x</button>
+          <button class="sc-btn" data-val="3">@3x</button>
+        </div>
+      </div>
+      <div class="scale-row">
+        <span class="scale-label">App Comps</span>
+        <div class="scale-btns" data-key="appComps">
+          <button class="sc-btn" data-val="1">@1x</button>
+          <button class="sc-btn" data-val="2">@2x</button>
+          <button class="sc-btn" data-val="3">@3x</button>
+        </div>
+      </div>
+      <div class="scale-row">
+        <span class="scale-label">Email Comps</span>
+        <div class="scale-btns" data-key="emailComps">
+          <button class="sc-btn" data-val="1">@1x</button>
+          <button class="sc-btn" data-val="2">@2x</button>
+          <button class="sc-btn" data-val="3">@3x</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Step 4 — Copy document</div>
+    <div class="co on" id="co-extract">
+      <div class="cr"></div>
+      <div><div class="co-t">Create copy documents</div><div class="co-d">Adds panel-matched Design Space assets, tagged copy and visible “Shopping With Us is Easy” text to separate App and Email Word documents.</div></div>
+    </div>
+    <div class="co" id="co-skip">
+      <div class="cr"></div>
+      <div><div class="co-t">Skip copy</div><div class="co-d">Slices and comps only.</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Filename preview</div>
+    <div class="fp-lbl" id="fp-app-label">Nike App Slice</div>
+    <div class="fp" id="fp-app"></div>
+    <div class="fp-lbl" id="fp-email-label">Nike Email Slice</div>
+    <div class="fp" id="fp-email"></div>
+    <div class="fp-lbl">Comp @2x</div>
+    <div class="fp" id="fp-comp"></div>
+  </div>
+
+</div>
+
+<!-- ══ SLICES ══ -->
+<div class="pnl" id="pnl-slices">
+  <div class="notice ni" id="slice-source-notice"><strong>Slice source:</strong> the matching Week section in Design Space. The App or Email section sets the channel. Shared “Shopping With Us is Easy” assets are detected from the component automatically. Hidden or locked items and working frames named “Frame” are excluded.</div>
+  <div class="rb">
+    <div class="lbl" style="margin:0">Slices <span class="bdg" id="slices-count" style="margin-left:5px">0</span></div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="btn btn-gh btn-sm" id="sl-all">All</button>
+      <button class="btn btn-gh btn-sm" id="sl-none">None</button>
+      <button class="btn btn-gh btn-ic" id="sl-refresh">↺</button>
+    </div>
+  </div>
+  <div id="slices-list"><div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">Scan a page first</div></div>
+</div>
+
+<!-- ══ COMPS ══ -->
+<div class="pnl" id="pnl-comps">
+  <div class="notice ni" id="comp-source-notice"><strong>Comp and copy source:</strong> the selected Theme. Start final comps with <strong>[COMP]</strong>. Tagged copy and visible text inside “Shopping With Us is Easy” are added to the Word documents when copy export is enabled.</div>
+  <div class="rb">
+    <div class="lbl" style="margin:0">Comps <span class="bdg" id="comps-count" style="margin-left:5px">0</span></div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="btn btn-gh btn-sm" id="co-all">All</button>
+      <button class="btn btn-gh btn-sm" id="co-none">None</button>
+      <button class="btn btn-gh btn-ic" id="co-refresh">↺</button>
+    </div>
+  </div>
+  <div id="comps-list"><div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">Scan a page first</div></div>
+</div>
+
+<!-- ══ SELECTED COPY ══ -->
+<div class="pnl" id="pnl-copy">
+  <div class="notice ni"><strong>Selected-frame copy:</strong> select frames, components, or a section/group on the canvas, then choose <strong>Read selected frames</strong>. This workflow does not use delivery paths, phases, or legacy NVS naming.</div>
+  <div class="rb">
+    <div class="lbl" style="margin:0">Selected frames <span class="bdg" id="selected-copy-count" style="margin-left:5px">0</span></div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="btn btn-gh btn-sm" id="selected-copy-all">All</button>
+      <button class="btn btn-gh btn-sm" id="selected-copy-none">None</button>
+      <button class="btn btn-gh btn-ic" id="selected-copy-refresh">↺</button>
+    </div>
+  </div>
+  <div id="selected-copy-list"><div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">Select frames on the canvas, then read the selection</div></div>
+</div>
+
+<div id="prog-blk">
+  <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
+    <span id="prog-txt">Exporting…</span><span id="prog-lbl">0/0</span>
+  </div>
+  <div class="prog-tr"><div class="prog-fi" id="prog-fi"></div></div>
+</div>
+
+<div id="res-blk">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+    <span style="font-size:11px;font-weight:600" id="res-title">Done</span>
+    <button class="btn btn-gh btn-sm" id="clear-btn">Clear</button>
+  </div>
+  <div class="rlist" id="res-list"></div>
+  <div id="res-notice" style="display:none;margin-top:7px"></div>
+</div>
+
+<div class="footer">
+  <button class="btn btn-sec" id="scan-btn">Scan theme</button>
+  <button class="btn btn-pri btn-full" id="exp-btn" disabled>Export ZIP</button>
+  <button class="btn btn-gh" id="close-btn">✕</button>
+</div>
+
+<script>
+var S = {
+  copyMode: 'extract',
+  slicesFrames: [],
+  compsFrames: [],
+  selSlices: {},
+  selComps:  {},
+  fmtSlices: {},
+  fmtComps:  {},
+  selectedCopyFrames: [],
+  selSelectedCopy: {}
+};
+
+// ── Tabs ──────────────────────────────────────
+document.querySelectorAll('.tab').forEach(function(t) {
+  t.addEventListener('click', function() { showTab(t.dataset.tab); });
+});
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('.pnl').forEach(function(p) { p.classList.remove('on'); });
+  document.querySelector('.tab[data-tab="'+name+'"]').classList.add('on');
+  document.getElementById('pnl-'+name).classList.add('on');
+  var copyTab = name === 'copy';
+  document.getElementById('scan-btn').textContent = copyTab ? 'Read selected frames' : 'Scan sources';
+  updateBtn();
+}
+
+// ── Date auto-fill DD-MM-YY ───────────────────
+(function() {
+  var d = new Date();
+  function pad(n) { return n < 10 ? '0'+n : ''+n; }
+  document.getElementById('export-date').value = pad(d.getDate())+'-'+pad(d.getMonth()+1)+'-'+String(d.getFullYear()).slice(2);
+  updatePreview();
+})();
+
+// ── Export scale state ────────────────────────
+function getDefaultScaleState(fileSetup) {
+  var appScale = fileSetup === 'targeted-comms' ? 1 : 2;
+  return { appSlices: appScale, emailSlices: 2, appComps: appScale, emailComps: 2 };
+}
+
+var scaleState = getDefaultScaleState('retention-offense');
+var sliceFormatState = { appSlices: 'PNG', emailSlices: 'PNG' };
+
+function initScaleBtns() {
+  document.querySelectorAll('.scale-btns').forEach(function(group) {
+    var key = group.dataset.key;
+    // Set default active
+    group.querySelectorAll('.sc-btn').forEach(function(btn) {
+      if (parseInt(btn.dataset.val) === scaleState[key]) btn.classList.add('active');
+      btn.addEventListener('click', function() {
+        scaleState[key] = parseInt(btn.dataset.val);
+        group.querySelectorAll('.sc-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        updatePreview();
+      });
+    });
+  });
+}
+initScaleBtns();
+
+function resetScaleControls(fileSetup) {
+  scaleState = getDefaultScaleState(fileSetup);
+  document.querySelectorAll('.scale-btns').forEach(function(group) {
+    var key = group.dataset.key;
+    group.querySelectorAll('.sc-btn').forEach(function(btn) {
+      btn.classList.toggle('active', parseInt(btn.dataset.val) === scaleState[key]);
+    });
+  });
+}
+
+function getBulkSliceFormat(channel) {
+  return channel === 'Nike Email' ? sliceFormatState.emailSlices : sliceFormatState.appSlices;
+}
+
+function applyBulkSliceFormatToFrames(frames, fmtMap, channel, format) {
+  for (var i = 0; i < frames.length; i++) {
+    var frame = frames[i];
+    if (frame.fileSetup === 'targeted-comms' && !frame.isComp && !frame.isGif && frame.channel === channel) {
+      fmtMap[frame.id] = format;
+    }
+  }
+  return fmtMap;
+}
+
+function getInitialExportFormat(f) {
+  if (f.fileSetup === 'targeted-comms' && !f.isComp && !f.isGif) return getBulkSliceFormat(f.channel);
+  return getDefaultExportFormat(f);
+}
+
+function setFrameExportFormat(fmtMap, frameId, format) {
+  fmtMap[frameId] = format;
+  return fmtMap;
+}
+
+function initSliceFormatBtns() {
+  document.querySelectorAll('.format-btns').forEach(function(group) {
+    var key = group.dataset.key;
+    group.querySelectorAll('.sc-btn').forEach(function(btn) {
+      if (btn.dataset.val === sliceFormatState[key]) btn.classList.add('active');
+      btn.addEventListener('click', function() {
+        sliceFormatState[key] = btn.dataset.val;
+        group.querySelectorAll('.sc-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var channel = key === 'emailSlices' ? 'Nike Email' : 'Nike App';
+        applyBulkSliceFormatToFrames(S.slicesFrames, S.fmtSlices, channel, sliceFormatState[key]);
+        if (S.slicesFrames.length) renderFrames(S.slicesFrames, 'slices-list', S.selSlices, 'slices-count', S.fmtSlices, true);
+        updatePreview();
+      });
+    });
+  });
+}
+initSliceFormatBtns();
+
+function getScale(channel, isComp, name) {
+  var isEmail = channel && channel.indexOf('Nike Email') === 0;
+  if (isComp) return isEmail ? scaleState.emailComps : scaleState.appComps;
+  return isEmail ? scaleState.emailSlices : scaleState.appSlices;
+}
+
+// ── Scale rules (mirrors code.js) ────────────
+function getSafeExportScale(width, height, requestedScale, isComp, fileSetup) {
+  return requestedScale;
+}
+
+function getScales(channel, isComp, name, width, height, fileSetup) {
+  if (fileSetup === 'mid-season-promo') return [channel === 'Paid Media' ? 1 : 2];
+  return [getSafeExportScale(width, height, getScale(channel, isComp, name), isComp, fileSetup)];
+}
+
+function getFrameScales(frame) {
+  if ((frame.fileSetup === 'mid-season-promo' || frame.fileSetup === 'nsp-store-appearance') && Array.isArray(frame.scales) && frame.scales.length) return frame.scales.slice();
+  return getScales(frame.channel, frame.isComp, frame.name, frame.width, frame.height, frame.fileSetup);
+}
+
+function getTargetedFolderChannel(name, channel, deliveryType) {
+  if (deliveryType === 'Thread') return 'Thread';
+  if (/thread/i.test(name || '')) return 'Thread';
+  return channel === 'Nike Email' ? 'Email' : 'App';
+}
+
+function getNvsChannelFolder(channel) {
+  return channel === 'Nike Email' ? 'Nike Email' : 'Nike App';
+}
+
+function cleanTargetedFilenameLabel(label) {
+  return String(label || '')
+    .replace(/\[\s*(?:COMP|ASSET|SLICE|P\d+|NIKE APP|APP|NIKE EMAIL|EMAIL|GIF|ANIMATED)\s*\]/gi, ' ')
+    .replace(/^\s*comp\s*[-_:]?\s*/i, '')
+    .replace(/^\s*\[|\]\s*$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function sanitizeTargetedFilenamePart(value) {
+  return String(value || '')
+    .replace(/[\/\\]+/g, ' - ')
+    .replace(/[:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getTargetedFilenameLead(date, code, proj) {
+  var targetedIdentity = [code ? '[' + sanitizeTargetedFilenamePart(code) + ']' : null, sanitizeTargetedFilenamePart(proj)].filter(Boolean).join(' ');
+  return [sanitizeTargetedFilenamePart(date) || null, targetedIdentity || null].filter(Boolean).join('_');
+}
+
+function escapePreviewHtml(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function getRetentionCopyDocName(fileName, code, projectName) {
+  var sourceName = String(fileName || '').trim();
+  if (sourceName) {
+    sourceName = sourceName.replace(/^\s*\[([^\]]+)\]\s*/, '$1 ');
+  } else {
+    sourceName = [String(code || '').replace(/[\[\]]/g, '').trim(), String(projectName || '').trim()].filter(Boolean).join(' ');
+  }
+  return sourceName
+    .replace(/\.docx$/i, '')
+    .replace(/\s*\|\s*/g, ' _ ')
+    .replace(/[\/\\:*?"<>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() + '.docx';
+}
+
+function makeTargetedFilename(f, scale, date, code, proj) {
+  var targetedLead = getTargetedFilenameLead(date, code, proj);
+  var channel = f.channel === 'Nike Email' ? 'Nike Email' : 'Nike App';
+  var parts = [targetedLead, sanitizeTargetedFilenamePart(f.phase) || null, channel];
+  var scaleSuffix = scale > 1 ? '@' + scale + 'x' : '';
+  if (f.isComp) {
+    if (channel === 'Nike Email') {
+      parts.push(sanitizeTargetedFilenamePart(f.market) || null, 'COMP');
+    } else {
+      var compVariant = sanitizeTargetedFilenamePart(cleanTargetedFilenameLabel(f.label || f.name));
+      parts.push(compVariant ? 'COMP-' + compVariant : 'COMP');
+    }
+    return parts.filter(Boolean).join('_') + scaleSuffix;
+  }
+  var sliceLabel = sanitizeTargetedFilenamePart(cleanTargetedFilenameLabel(f.label || f.name)) || 'Asset';
+  parts.push('[' + sliceLabel + ']', f.width + 'x' + f.height);
+  return parts.filter(Boolean).join('_') + scaleSuffix;
+}
+
+function makeNspFilename(f, scale, date, code, proj) {
+  var store = sanitizeTargetedFilenamePart(f.nspStore || 'Store');
+  var campaign = [code ? '[' + sanitizeTargetedFilenamePart(code) + ']' : null, sanitizeTargetedFilenamePart(proj)].filter(Boolean).join(' ');
+  var channelLabel = f.channel;
+  var parts = [date || null, campaign, store, sanitizeTargetedFilenamePart(channelLabel)];
+  // Descriptive CXP comp names already identify both the channel and layout;
+  // a trailing [COMP] adds no information. Nike Email variants follow the
+  // Retention convention used by App comp variants: [COMP-Variant]@2x.
+  if (f.isComp) {
+    if (f.channel === 'CXP' && f.nspCompVariant) {
+      parts.push('[COMP-' + f.nspCompVariant + ']');
+    } else if (f.channel === 'Nike Email' && f.nspCompMode) {
+      parts.push('[COMP-' + sanitizeTargetedFilenamePart(f.nspCompMode) + ']');
+    } else {
+      parts.push('[COMP]');
+    }
+  } else {
+    // NSP filenames describe the delivered pixels. As with the other plugin
+    // streams, every actual 2x export also ends with an explicit @2x marker.
+    var outputWidth = Math.round(f.width * scale);
+    var outputHeight = Math.round(f.height * scale);
+    parts.push('[' + (sanitizeTargetedFilenamePart(cleanTargetedFilenameLabel(f.label || f.name)) || 'Asset') + ']', outputWidth + 'x' + outputHeight);
+  }
+  return parts.filter(Boolean).join('_') + (scale > 1 ? '@' + scale + 'x' : '');
+}
+
+function makeManualNspFilename(f, scale, date, code, proj) {
+  var campaign = [code ? '[' + sanitizeTargetedFilenamePart(code) + ']' : null, sanitizeTargetedFilenamePart(proj)].filter(Boolean).join(' ');
+  var lead = [date || null, campaign].filter(Boolean).join('_');
+  var raw = String(f.label || f.name || 'Asset');
+  var orientation = /\b(?:MB|Mobile|Portrait|Potrait)\b/i.test(raw) ? 'MB' : (/\b(?:DT|Desktop|Landscape)\b/i.test(raw) ? 'DT' : null);
+  if (f.channel === 'CXP') {
+    var cxpName = [lead, 'CXP-' + (orientation || sanitizeTargetedFilenamePart(raw))].filter(Boolean).join('_');
+    return f.isComp ? cxpName + '_COMP@2x' : cxpName + '_' + Math.round(f.width * scale) + 'x' + Math.round(f.height * scale);
+  }
+  if (f.channel === 'Nike Email') {
+    var group = f.subfolderSection || (/supporting/i.test(raw) ? 'Supporting' : 'Hero');
+    if (group === 'Hero' && !orientation) orientation = f.width >= 600 ? 'DT' : 'MB';
+    var emailAsset = group === 'Supporting' && /^Supporting\s+\d+$/i.test(raw)
+      ? sanitizeTargetedFilenamePart(raw) : group + (orientation ? '-' + orientation : '');
+    if (f.isComp) {
+      var mode = f.nspCompMode ? String(f.nspCompMode).toUpperCase() : (/dark/i.test(raw) ? 'DARK MODE' : (/light/i.test(raw) ? 'LIGHT MODE' : null));
+      return [lead, 'Nike Email', emailAsset, 'COMP' + (mode ? '_' + mode : '')].filter(Boolean).join('_') + '@2x';
+    }
+    return [lead, 'Nike Email', emailAsset, f.width + 'x' + f.height + '@2x'].filter(Boolean).join('_');
+  }
+  var paidLabel = /^Meta Story$/i.test(raw) ? 'Meta_Story' :
+    (/^Meta Reel$/i.test(raw) ? 'Meta_Reel' : (/^TikTok In-Feed$/i.test(raw) ? 'TikTok_In-Feed' :
+      (/^Meta In-Feed Static$/i.test(raw) ? 'Meta_In-Feed Static' : sanitizeTargetedFilenamePart(raw))));
+  return [lead, paidLabel, Math.round(f.width * scale) + 'x' + Math.round(f.height * scale)].filter(Boolean).join('_');
+}
+
+function getDefaultExportFormat(f) {
+  if (f.fileSetup === 'mid-season-promo') {
+    if (f.isMidSeasonUtilityIcon) return 'PNG';
+    if (!f.isComp) return 'JPG';
+    return f.channel === 'Nike App' || f.channel === 'Nike Email' ? 'JPG' : 'PNG';
+  }
+  if (f.fileSetup === 'targeted-comms') return 'PNG';
+  if (f.fileSetup === 'nsp-store-appearance') return f.isGif ? 'GIF' : (f.nspManual && f.isComp ? 'PNG' : (f.forcePng ? 'PNG' : 'JPG'));
+  return f.forcePng ? 'PNG' : 'JPG';
+}
+
+function getJobExportFormat(f, selectedFormat) {
+  if (f.isGif) return 'GIF';
+  if (f.fileSetup === 'mid-season-promo' && f.isComp) return getDefaultExportFormat(f);
+  if (f.fileSetup === 'targeted-comms' || f.fileSetup === 'nsp-store-appearance') return selectedFormat || getDefaultExportFormat(f);
+  return f.forcePng ? 'PNG' : (selectedFormat || getDefaultExportFormat(f));
+}
+
+function makeMidSeasonFilename(f, scale, date) {
+  var base = String(f.midSeasonFilename || f.label || f.name).replace(/\.(?:jpe?g|png|gif)$/i, '');
+  base = base.replace(/@\d+x$/i, '');
+  if (f.channel === 'Paid Media') {
+    if (/1080x1350/i.test(base) && !/Meta In-Feed/i.test(base)) base = base.replace(/Meta(?:\s+1x1)?(?=_)/i, 'Meta In-Feed 4x5');
+    if (/1080x1920/i.test(base) && !/Meta Story(?:\s+9x16)?/i.test(base)) base = base.replace(/Meta(?=_)/i, 'Meta Story 9x16');
+  }
+  var hideSliceSuffix = !f.isComp && (f.channel === 'Paid Media' || f.channel === 'Nike App' || f.channel === 'Nike.com' || f.channel === 'Nike App Shop Home');
+  var expectedScale = scale > 1 && !hideSliceSuffix ? '@' + scale + 'x' : '';
+  if (expectedScale) base += expectedScale;
+  var heroPrefix = f.channel === 'Nike Email' && /\[(?:DT|MB)\s+Hero\]/i.test(base) && !/^Hero_/i.test(base) ? 'Hero_' : '';
+  if (f.isMidSeasonUtilityIcon) return base;
+  return (date ? date + '_' : '') + heroPrefix + base;
+}
+
+function getMidSeasonPhaseFolderLabel(phase, overrideLabel) {
+  var phaseName = String(phase || '').trim();
+  var deliveryName = String(overrideLabel || '').trim();
+  if (!deliveryName || deliveryName.toLowerCase() === phaseName.toLowerCase()) return phaseName;
+  if (/^Phase\s*\d+\b/i.test(deliveryName)) return phaseName ? deliveryName.replace(/^Phase\s*\d+\b/i, phaseName) : deliveryName;
+  return [phaseName, deliveryName].filter(Boolean).join(' - ');
+}
+
+function getMidSeasonDeliveryLabel(phase, overrideLabel) {
+  return getMidSeasonPhaseFolderLabel(phase, overrideLabel)
+    .replace(/^Phase\s*\d+\s*[-–—]?\s*/i, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim() || String(phase || '').trim();
+}
+
+/* utility-benefits-generated:start */
+var MID_SEASON_UTILITY_ICON_BASE64 = {
+  "Digital Ecosystem Utility Benefits_Icon_[30 Day Returns]_200x200.png": "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",
+  "Digital Ecosystem Utility Benefits_Icon_[Buy Now Pay Later]_200x200.png": "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",
+  "Digital Ecosystem Utility Benefits_Icon_[Express Shipping]_200x200.png": "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",
+  "Digital Ecosystem Utility Benefits_Icon_[Get Help]_200x200.png": "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",
+  "Digital Ecosystem Utility Benefits_Icon_[Shipping Cut Off Dates]_200x200.png": "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",
+  "Digital Ecosystem Utility Benefits_Icon_[Shipping Perks]_200x200.png": "iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAEVxJREFUeAHtnTtvXMUbxl9H1MSiDxz3IJwapGxKQIKkg0gIpyMCKaEBiRTYBUjQQCQk6DBCAjoSpECZjQQ1RtDn/OELOJ/A/3n2zITjzc6c+9zO85MmZ32Jveud57y3mXe2hEzCycnJtroUauyqgcfP6Kv5/Lb+1u3a43WO9QBl7YrP/a/2+Ghra+tYyOhsCRmEFsJCqkn/vFSCwONt8ctKKPp6Xz+mcAZCgXRECQICWEglBlwLiZtSKrFANEslmCMhraFAGlCCKNTlkhoXpBKEb8swNrAoSzXuSCWYUogVCmQDShQLdXlNKmEUkjelGrfVuKPEshRyCgpEUxPFnqRvJfpSSmVdvqVYKmYtEB1gX5dKFIWQOqUat9S4PWc3bJYC0dbiI6liCtIMXDBYldsyM2YjEFqLUSjVOJDKqswifZy9QGrCuCHzjS3GppTKqtzK3f3KViAUhjcO1TjIVSjZCYTCCMa+VHFKKRmRjUAojCgopXK7vpBMyEIgOiv1jTD4joVSKrfrUBInaYHoZSAQxkJIjBxK4vHJGUkUJQ7UMf4QiiNm9tR4oN+rJEnOgujVtLAau0JSolTjYmrWJCkLUrMaFEd6FJKgNUnCguhY4yehMHKhlESsSfQWRIkDqVtajbwo1PhDvbc3JHKitSC6rgFzHP0fkQwCNZODWNd2RSkQulSzo5RIXa7oXCxd9KNLNS8KNe7p9z4qohKIjjfuCZeKzJFCKpFEleWKRiD6D5PNGh7Sm/2YRBI8BtHB+OdSVV0JMRyqmOSqBCaoQLQ44FIx3iCbQA+viyEzXMFcLJ2pojiIC8yNe3quBCGIBamJoxBCmiklUBrYu0AoDtKTUgKIxKtAKA4ykFI8i8SbQBiQk5HwGrj7FAir42QsvInESxZLiYMbnMiYYC59Lh6YXCC6KronhIzLno+K+6Quln4B+0LIdLw3ZZuhyQSiV2beE0Km5+JUxzVMIhCmc4lnEKyfnyL9O7pAdDoXGatCCPHHJJmtKYJ0xB2FEOIXZLZGD9pHFYje8MQ95CQUN8ZuBDGai6XjDrhW3A1IQjJqPDKmQB4IXSsSB0dKIOdlBJ6QEdD1jkIS5OHDh/LPP/+sBh6v8/TTT6+uzz33nJw9e1ZIEuyqObmvRLIvAxlsQbRr9UASAAL466+/5Ndff11dMTaJwgYEAqG88MILq/Hiiy8KiRq4WkcygDEEErVrBQH88MMP8ssvv3QWRBMQDETy8ssvyxtvvCEkOga7WoMEEvNSEojhxx9/lO+//35UUdiAKwaxvP/++4/cMhIFB0Ncrd4CidW1Qizx7rvvym+//SahuHLlCoUSD4OyWkPqIFE1+IKV+PDDD2V3dzeoOACsFp7Hp59+KiQ4KDt8Iz3pZUGU9dgb8kvHBvHFO++848WV6gqsyJdffsmAPjy9FjT2FUgUgTkEgbv0119/LV0xAfazzz4r586dW03kdZcIP9+Mv//+W37//ffegf4HH3ywGiQYpVSuVqe1Wp0FopeTBG8Riljj1VdfXV3bAkEgPYusE9K1fYELB6uF0eX343d+9913jE3C0Tlg7ySQWJax4y4OcbS9kyMFizGFmwOxII2M0QaI4+eff6ZIwgDrsdPFinQVSPC0Libkm2++2UocEAXcGh+TEZYE7l4boeD5wJIMsWKkN52sSGuBxJDWheW4cOFC4/dh4n388cdBAuO7d+/KzZs3G10vxECwJBSJdzpZkS5p3qBpXeNWNfH222/L/fv3g2WNXnnlldXvx/NwAQsIS9glhiGjgLRv6yXxrSxIaOvRJiDHHRluS0zp1K+++ko+++wzpzsIdwuC4kJIr7S2Im0tyHUJSJM4zCSLrdZw7dq1xoAcrwuWhHiltRVpFIjeY35JAoHqeJM4Ys4KIcZoen5IPPSp5ZBBXNdz20mjixWyao6J44o7UkqZQuRIMLjcLVhBBu1eacxotRFIsKo51jPZrAd8dkyolOoJTYKHiwjBE2+USiA7rm9wulhKHHCtCgkAagou1wpp3NSKbRAAnrcNulreKZqOnnZaEPWff5IA8QeEAethAynUTz75RFIFQTnqJZuAZTw6OmJWyx9LZUUu2r5otSA6tRskOEdq1AasRsriAFjdaxMAYhRaEa8sXMG6y8UKIg5YD+ynsIGNSKkDcbheBwQS49L9jLGmfK0uVqjgHGuZsLdjE6hSoxiYCwjYbZu7UoivsM4tk7341mB9o0BCdmZ3Za5yS4M2ZbViJ7Os28YNVTYX6y0JACaMTRx4M3KrEeA1pbzs3fV+JcjGkMImkIUEAF1IbLz++uuSI6m7KG33wSTARqPwmIsVo3uFuyxSnzmCYHxnZ0dSBQmHBw+S6BvYhsfcrE0WJFj2ymausU02NvBcXenotpi98akCgYfuIjMij839Tb15X5MAoCGCDewhj4n68nsM1DWGgNfnymbFEqfYniP25mfStQVz/1TK95RAdHGwkABgQ5SNmP7463tTTM1miEhcFhKrBpo2X/kAlgIu8Kb6DOKQ1Iu3Giw9KepN5tZdrIUEAm11NhFTV3Xbxi2IBN0c++J6ja4bh0/w/GwJhZzdrHWBBHGvgG0ioGdVDDTtaoRIsHelLzY3ynbjCIHL1R0jHouERf2DaCyIbWlFDLWPtlt+h6Rs0cBuEzEtOYGr67J0mSyPOdUV5JFAlO+F5bNBjk9rmnhjgSX0Xd/EtuIY2qHEZkFiK8TZ4iFzzEQGbGstrKhbkIUEwjVpxxII1ndBIF0azvkSh/k5NmK6M7sSCshmZcLCPKgLpLnh1ES4JsAYMQjEYe5ubbsy+hSH+Vk2YnOzbFlFBOqZuFnPmwd1gexKhtTFYWgSiW9xpIbLimSyl2VhHqwEojeMFBII193z33//lb5sEofBJpJQ4kjpzuuqy7gKvglRmE1UxoIEtR5T1TmaKtDrIglpOZqay8WEa3kM3KxMaiIL/BO9QIZkcdqcyWFEYq6h3KrUfHdXTSQXK4J/jECCBegAE88mkqFpzrYiQc+qkDGHayVBjKDmY3vPMolDVoG6EUiQ+kcd2x97jEry0NOdfATkNgsSa3cTPC9bsJ7J0pOVVxWFiwVsf+yxCmV9ReJLHLalNrYKewy4gvUMaiIF/jmjo/XgFsQ2Ace8G3UVia9Urstnj3EvjMG19ATZw8RrIqiob8OCRFH/cN0pxwz62orEZ53DdbeNfc+6a4VvBsF6AYEEtx7AteR77D90k0h8FwFdm6ViL0S6slkZBOu7EEghEYBJaZsMmEBj74uwiSSEOFLaaryOqzNLBktPtqMRCHDdjaYI+tZFEmL5iKuTSyodT1zPM/EVvsWWCkQOJVAfrHVcHT6mbOqMVb5wB3yLo6lJ95DUtE9c/YQTby53CIGgxc9CIsHVjnNoPcMFJqvvgBjbdF19iHMBN7ZEG+Td6XLKrRdCNXX2/QY2NenOiYTdrGeiikGAa78BxJHL3ueM9nA3knC6dzs6CwJcVgRHK6e+jAF31LlYj9SJpg5Sx2VFAHz3VNOHcK2QFCBJsB2lQIDLiqR8tnjTknoSFdtPSKTAgmAxnC19CDcLd+JUUqEAOxxd4pgyS+cDVwYyVaKMQQyYLK7sEgSSiruC5+nK5uB1piyOXIlaICgKNh25loJI0HHR9RwhDp6PHidRCwSgsu06Wxxg8t28eVNiA4kEuFVNi/ZSPPN9LkQvEHDt2rXGDudI/zZtm/UJngeeT1ORDG4VDiclcQKBHEsCoL3+lStXnN9jGi+ErtzCYrQRa+pB+Qw4TkYgAGdwNIkEkxJuDWolvq2JObUWMUdTnYbiSILjJFysOm1EAlCpxkpZH0Ixwmib5qQ40iEpC2KASNpOMCMU43qNVYE3S7y7CAPAVaQ4kqFEobCUBPvyYpI9+eSTq0V/bSZ9veMfgmLs1sM++LbHu5nOI2hDhM1bXQtiJmWdyVl+swECSXZPJLJbmOxdl2/cvXt3NQzmoMxNDezMwTBD3DSIAlaPqdzkWFmQ5FysOuYM9aeeekr64jqCeggQGyxdDIdwkl48NC4WGREIw5xOG2tnRNKK9C1ITFAY2bESyJFkDPz/qVyo+u946aWXVulnCiMrjrN3sZCtwkJABNvIPmH759Al2aaHF0SBJAGD72w5emJra+v45OQEblaUG6fGAhO63tLHNKPDCVYYtkyVyXAhpYy08PrPIdlyDG2YDVOlZHpGoY2mbb1k9qxCD7PU5E8hhNRZ1QeNQLIO1AnpwRL/GIGUQgipc8rFWgohpM5/AkG0LrQihBhKrYlTW27vCyEEPEpa1QXCQJ2QiqV5cGbTJwmZOUvz4JFAlM8FC8KFi2TuHGstrFjfk74UQubNqVj8jOuLhMyQ2/UPzri+SMgMWdY/OCUQ5XuVwnoImS+l1sAjNvXFuiOEzJPH5v4mgdDNInPlsbn/mECUiVkK071kfpR67p/C1nr0WyFkXiw3fdImELpZZG5sNAobBaJNTSmEzION7hVwdXenm0Xmwi3bF1wC+UIImQfWkMIqEL1hZCmE5M2d9eJgnaYDdA6EkLw5dH3RKRAG6yRzEJw7M7ZtjmBjsE5ypdFDaiMQBOusrJPcKKVFva9RIDpYvyWE5MVt07nExZa04OTkBI2tH0jEDa6HnDBFpgU9kNFhPzJ2XNkrQ6tjoGlFSGYcthEH6HJOOmMRkgutyxetBUIrQjLhoK31AF0sCKAVISlTSkNhcJ1OAqEVIYlzq4v1AE9Id2BF3lKjkIjAeeQkTs6dOycRgKp55wW4rdK866i070Jd7gkh6XBVCeRQOtI1Blmh12gthZA0OOwjDtDLggBlRQp1+UMyPx2XZMFO19jD0MuCAP0LGbCT2DnoKw7Q24IYlCWBFZnVEdIkGRCY78gAeluQGleFkDi5KAMZLBB9lgJ3HpLYGORaGQa7WAa6WiQiBrtWhjFcLMNl4TIUEh7MwcGulWE0gWhzRleLhGYU18owmotlUK4WyvnXhRD/YK3VDRmRKQSCwiGWoTAeIT4p1TjfZhttF0YXCGCVnXimVOPimK6VYcwg/RH6iV4WQvxwdQpxgEkEAvSCxveEkGk5sHVmH4PJBAL0+ntmtshUQBz7MiGTxCDrqJjkUKpNVoSMxbdKHHsyMb4EwswWGZMjJY7z4oFJXSyDTr2hunkkhAwDc2i0SnkTXiyIQad/YUkKIaQ7pUyUzrXhVSCAIiE9KcWzOIB3gQCKhHSklADiAF5ikHX0C2VMQtqwijlCiAMEsSAGZrdIA0YcwbZRBLEgBrxwna7jKVZkHcyJoOIAQQVi0AUfVtyJARXyvdDiAEFdrHWUy7WvLh8JmTPv9WkROhVRCQTotqbfCDNccwPW4vKUCw/7EJ1AANPAswPB+OVQmSoXUcQg6+g/FIJ3dm7MH7zHF2MUB4jSgtRR1gR7jBGXcHdiXsClOogp3thE9AIBdLmyI1qXap0oXax18IfUjcCYCk4fWI3zKYgDJGFB6tCaJAusxlXdqjYZkrAgdWhNksPEGudTEwdIzoLU0dZkX7idN1aWMmHHER8kLRCDEsqeVJmuQkgMlFIJYymJk4VADDoljLanhZAQmGPCv4hhHdUYZCUQoN2uPeGaLp9kJwxDdgIxMD7xQrbCMGQrEIMWClyv14Su11hkLwxD9gIx6N2Ll4TB/BBKqTYyZS8Mw2wEUkeJBUKB63VJSBuWMnEP3FiZpUAM2v2CSJj5epxSZmYtNjFrgdTRG7X21Lgg8xULhABR3J6jtdgEBbIBLRZYljkE9qUad4Si2AgF0oB2wxZSiQXX1PelwEos1bgvlShKIVYokI4owaCH10IqVwyPC4mbUipB/IlrigsGQ0KBDESnj3f1gGjMx74tDSxDKdWy8j/14+WcA+wxoEAmoiYcXAs9zsp/Fsdct8UupmM9zONSXx/WHkMQJYUwDf8HXBLVi5nksmgAAAAASUVORK5CYII="
+};
+/* utility-benefits-generated:end */
+
+function getMidSeasonBundledUtilityIcons() {
+  return Object.keys(MID_SEASON_UTILITY_ICON_BASE64).map(function(filename) {
+    var binary = atob(MID_SEASON_UTILITY_ICON_BASE64[filename]);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return { filename: filename, bytes: bytes };
+  });
+}
+
+function shouldBundleMidSeasonUtilityIcons(frame, selectedComps) {
+  return !!(frame && selectedComps && selectedComps[frame.id] &&
+    frame.fileSetup === 'mid-season-promo' && frame.channel === 'Nike Email' &&
+    frame.hasMidSeasonUtilityBenefits);
+}
+
+function getMidSeasonMp4Reminder(frame, date, code, projectName) {
+  var lead = [code ? '[' + code + ']' : null, projectName].filter(Boolean).join(' ');
+  var expected = [date, lead, frame.phase, 'Paid Media', 'Meta Story', '1080x1920'].filter(Boolean).join('_') + '.mp4';
+  return {
+    filename: 'ADD FINAL MP4 - ' + expected + '.txt',
+    text: 'Final Meta Story video required.\n\nAdd the supplied MP4 to this folder and name it:\n' + expected + '\n'
+  };
+}
+
+function getRetentionGifStillFrame(frame) {
+  if (!frame || frame.fileSetup !== 'retention-offense' || !frame.isGif || frame.isComp || !/\bhero\b/i.test(frame.name || frame.label || '')) return null;
+  var stillFrame = Object.assign({}, frame);
+  stillFrame.isGif = false;
+  stillFrame.forcePng = false;
+  return stillFrame;
+}
+
+function getUniqueOutputFilename(baseFilename, subfolder, extension, usedOutputPaths) {
+  var filename = baseFilename;
+  var duplicateIndex = 1;
+  var outputKey = subfolder + '/' + filename + '.' + extension;
+  while (usedOutputPaths[outputKey]) {
+    filename = baseFilename + '-' + duplicateIndex;
+    duplicateIndex++;
+    outputKey = subfolder + '/' + filename + '.' + extension;
+  }
+  usedOutputPaths[outputKey] = true;
+  return filename;
+}
+
+function getUniqueResultFilename(filename, subfolder, usedOutputPaths) {
+  var match = String(filename || '').match(/^(.*)\.([^.]+)$/);
+  if (!match) return filename;
+  return getUniqueOutputFilename(match[1], subfolder, match[2], usedOutputPaths) + '.' + match[2];
+}
+
+function getTargetedCopyDestinations(frames, selections) {
+  var destinations = {}, order = [];
+  frames.filter(function(frame) { return selections[frame.id]; }).forEach(function(frame) {
+    var destination = {
+      phase: frame.phase || ((frame.audienceParts || [])[0]) || '',
+      type: getNvsChannelFolder(frame.channel),
+      channel: frame.channel || 'Nike App',
+      market: frame.channel === 'Nike Email' ? (frame.market || '') : ''
+    };
+    if (!destination.phase) return;
+    if (destination.type === 'Nike Email' && !destination.market) return;
+    var key = destination.phase + '::' + destination.type + '::' + destination.market;
+    if (!destinations[key]) { destinations[key] = destination; order.push(key); }
+  });
+  return order.map(function(key) { return destinations[key]; });
+}
+
+function getTargetedCopyPath(destination, docName) {
+  return [destination.phase, destination.type, destination.market || null, 'Copy', docName].filter(Boolean).join('/');
+}
+
+function getTargetedCopyFilename(destination, campaignCode, projectName) {
+  var cleanCode = String(campaignCode || '').replace(/[\[\]]/g, '').trim();
+  var cleanProject = String(projectName || '').replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, ' ').trim();
+  var campaign = [cleanCode && cleanProject.toLowerCase().indexOf(cleanCode.toLowerCase()) !== 0 ? cleanCode : null, cleanProject].filter(Boolean).join(' ');
+  return [campaign, destination.type, destination.phase, destination.market || null].filter(Boolean).join('_') + '.docx';
+}
+
+function getMidSeasonCopyPath(frame) {
+  if (frame.channel === 'Nike.com') return '';
+  var root = frame.midSeasonOutputRoot || frame.phase;
+  return frame.channel === 'Nike Email' ? [root, frame.channel, 'Dual Gender', 'Copy'].join('/') : [root, frame.channel, 'Copy'].join('/');
+}
+
+function getMidSeasonCopyToken(value) {
+  var clean = String(value || '').trim();
+  if (/^women(?:'|’)?s$/i.test(clean)) return 'W';
+  if (/^men(?:'|’)?s$/i.test(clean)) return 'M';
+  if (/^(dual gender|dg)$/i.test(clean)) return 'DG';
+  return clean;
+}
+
+function getMidSeasonPhaseLabel(phase) {
+  var clean = String(phase || '').trim();
+  if (/^phase\s*1$/i.test(clean)) return 'LAUNCH';
+  return clean.toUpperCase();
+}
+
+function getMidSeasonCopyIdentity(frame, code, projectName) {
+  var lead = [String(code || '').replace(/[\[\]]/g, '').trim(), String(projectName || '').trim()].filter(Boolean).join(' ');
+  var deliveryLabel = frame.midSeasonDeliveryLabel || getMidSeasonPhaseLabel(frame.phase);
+  var parts = [lead, 'Digital Assets', deliveryLabel, frame.channel === 'Nike Email' ? 'Nike Email DG' : frame.channel].filter(Boolean);
+  return {
+    filename: parts.join(' _ ') + '.docx',
+    title: parts.join(' | ')
+  };
+}
+
+function getCopyFallbackFrames(compsFrames, slicesFrames, selectedComps, selectedSlices) {
+  var compFallbacks = compsFrames.filter(function(frame) {
+    return selectedComps[frame.id] && !(frame.fileSetup === 'mid-season-promo' && frame.channel === 'Nike.com');
+  });
+  var hasManualNspEmailComp = compFallbacks.some(function(frame) {
+    return frame.nspManual && frame.channel === 'Nike Email';
+  });
+  if (!hasManualNspEmailComp) {
+    compFallbacks = compFallbacks.concat(slicesFrames.filter(function(frame) {
+      return selectedSlices[frame.id] && frame.nspManual && frame.channel === 'Nike Email';
+    }));
+  }
+  return compFallbacks;
+}
+
+function shouldCreateNspCopy(frame) {
+  if (!frame || frame.fileSetup !== 'nsp-store-appearance') return false;
+  return frame.nspManual ? frame.channel === 'Nike Email' || frame.channel === 'CXP' : frame.channel === 'Nike Email';
+}
+
+// ── Subfolder ─────────────────────────────────
+function getSubfolder(f, folderCount) {
+  var base = f.channel || 'Nike App';
+  var type = f.isComp ? 'Comps' : 'Slices';
+
+  if (f.fileSetup === 'mid-season-promo') {
+    var promoParts = (f.midSeasonFolderParts || [f.phase, f.channel, type]).slice();
+    var folderOverride = f.midSeasonOutputRoot || (typeof document !== 'undefined' ? document.getElementById('mid-season-folder-label').value : '');
+    promoParts[0] = getMidSeasonPhaseFolderLabel(f.phase || promoParts[0], folderOverride);
+    return promoParts.filter(Boolean).join('/');
+  }
+
+  if (f.fileSetup === 'targeted-comms') {
+    var targetedChannel = getNvsChannelFolder(f.channel);
+    var targetedType = f.isComp ? 'Comp' : 'Slices';
+    var targetedLeaf = null;
+    if (!f.isComp && targetedChannel === 'Nike Email') targetedLeaf = f.subfolderSection;
+    if (!f.isComp && targetedChannel === 'Nike App') {
+      var carouselFolder = String(f.subfolderSection || '').trim();
+      var isCarouselFolder = /^Carousel(?:\s+.+)?$/i.test(carouselFolder) && !/^Carousel[\s-]+Frame\b/i.test(carouselFolder);
+      var numberedCarouselFolder = carouselFolder.match(/^Carousel\s*(\d+)$/i);
+      if (f.deliveryType === 'Thread') {
+        var threadLeaf = f.subfolderSection === 'Hero' ? f.subfolderSection : (isCarouselFolder ? 'Carousel' : 'Supporting');
+        return [f.phase, targetedChannel, targetedType, 'Thread', threadLeaf, numberedCarouselFolder ? 'Carousel ' + numberedCarouselFolder[1] : null].filter(Boolean).join('/');
+      }
+      targetedLeaf = f.deliveryType && !/^(app|email)$/i.test(f.deliveryType) ? f.deliveryType : null;
+      if (isCarouselFolder) targetedLeaf = numberedCarouselFolder ? 'Carousel/Carousel ' + numberedCarouselFolder[1] : 'Carousel';
+    }
+    return [f.phase, targetedChannel, targetedChannel === 'Nike Email' ? f.market : null, targetedType, targetedLeaf].filter(Boolean).join('/');
+  }
+  if (f.fileSetup === 'nsp-store-appearance') {
+    if (f.nspManual) {
+      if (f.channel === 'Paid Media' || f.channel === 'Social') return f.channel;
+      return [f.channel, f.isComp ? 'Comps' : 'Slices', !f.isComp ? f.subfolderSection : null].filter(Boolean).join('/');
+    }
+    var nspChannelParts = f.channel === 'Nike Email' ? ['Email', 'Nike'] :
+      (f.channel === 'Retailors Email' ? ['Email', 'RTL'] : (f.channel === 'Social Motion' ? ['Social'] : [f.channel]));
+    if (f.channel === 'Social Motion') return [f.nspStore].concat(nspChannelParts).filter(Boolean).join('/');
+    return [f.nspStore].concat(nspChannelParts, [f.isComp ? 'Comp' : 'Slices', !f.isComp ? f.subfolderSection : null]).filter(Boolean).join('/');
+  }
+  var parts = [];
+  // A page such as "Week 9 | Kids Monthly" becomes the ZIP's delivery root.
+  // This keeps different weeks separate when they are exported together.
+  if (f.deliveryName) parts.push(f.deliveryName);
+  if (f.audienceParts && f.audienceParts.length) {
+    for (var a = 0; a < f.audienceParts.length; a++) parts.push(f.audienceParts[a]);
+  }
+  parts.push(base);
+  parts.push(type);
+  if (f.subfolderSection) parts.push(f.subfolderSection);
+  return parts.join('/');
+}
+
+function getTargetedEmailMarketsByPhase(frames) {
+  var marketsByPhase = {};
+  for (var i = 0; i < frames.length; i++) {
+    var frame = frames[i];
+    if (frame.fileSetup !== 'targeted-comms' || frame.channel !== 'Nike Email' || !frame.market) continue;
+    var phase = frame.phase || '';
+    if (!marketsByPhase[phase]) marketsByPhase[phase] = [];
+    if (marketsByPhase[phase].indexOf(frame.market) === -1) marketsByPhase[phase].push(frame.market);
+  }
+  Object.keys(marketsByPhase).forEach(function(phase) { marketsByPhase[phase].sort(); });
+  return marketsByPhase;
+}
+
+function expandTargetedEmailSliceJobs(jobs, marketsByPhase) {
+  var expanded = [];
+  for (var i = 0; i < jobs.length; i++) {
+    var job = jobs[i];
+    if (job.fileSetup !== 'targeted-comms' || job.channel !== 'Nike Email' || job.isComp || job.market) {
+      expanded.push(job);
+      continue;
+    }
+    var markets = marketsByPhase[job.phase || ''] || [];
+    if (!markets.length) {
+      expanded.push(job);
+      continue;
+    }
+    for (var m = 0; m < markets.length; m++) {
+      var marketJob = Object.assign({}, job);
+      marketJob.market = markets[m];
+      var channelRoot = (job.phase || '') + '/Nike Email/';
+      var relativeFolder = job.subfolder.indexOf(channelRoot) === 0 ? job.subfolder.slice(channelRoot.length) : job.subfolder;
+      marketJob.subfolder = channelRoot + markets[m] + '/' + relativeFolder;
+      expanded.push(marketJob);
+    }
+  }
+  return expanded;
+}
+
+// ── Filename preview ──────────────────────────
+function updatePreview() {
+  var code = document.getElementById('campaign-code').value.trim();
+  var date = document.getElementById('export-date').value.trim();
+  var previewDate = date || 'DD-MM-YY';
+  var proj = document.getElementById('project-name').value.trim() || 'Project Name';
+  var fmt  = 'jpg';
+  var appScale = (typeof scaleState !== 'undefined' && scaleState.appSlices) || 1;
+  var prefix = [date, code ? '['+code+']' : null, proj].filter(Boolean).join(' ');
+
+  if (document.getElementById('file-setup').value === 'mid-season-promo') {
+    document.getElementById('fp-app').innerHTML = '<span>'+previewDate+'_[NIKRA1001] FA26 Nike Mid-Season Promo</span>_Phase 2_Nike App_[Card]_750x1000@2x.jpg';
+    document.getElementById('fp-email').innerHTML = '<span>'+previewDate+'_[NIKRA1001] FA26 Nike Mid-Season Promo</span>_Phase 2_Nike Email_[DT Hero]_640x853@2x.jpg';
+    document.getElementById('fp-comp').innerHTML = '<span>'+previewDate+'_[NIKRA1001] FA26 Nike Mid-Season Promo</span>_Phase 2_Paid Media_Meta_1080x1080.jpg';
+    return;
+  }
+  if (document.getElementById('file-setup').value === 'nsp-store-appearance') {
+    var nspCampaign = escapePreviewHtml([code ? '['+code+']' : '', proj].filter(Boolean).join(' '));
+    var nspStore = escapePreviewHtml(document.getElementById('nsp-store').value.trim() || 'Store');
+    document.getElementById('fp-app').innerHTML = '<span>'+nspCampaign+'</span>_'+nspStore+'_CXP_[COMP-DT].jpg';
+    document.getElementById('fp-email').innerHTML = '<span>'+nspCampaign+'</span>_'+nspStore+'_Nike Email_[DT Hero]_1280x1706@2x.jpg';
+    document.getElementById('fp-comp').innerHTML = '<span>'+nspCampaign+'</span>_'+nspStore+'_Retailors Email_[COMP]@2x.jpg';
+    return;
+  }
+  if (document.getElementById('file-setup').value !== 'retention-offense') {
+    var targetedPrefix = escapePreviewHtml(getTargetedFilenameLead(date, code, proj));
+    var targetedAppFormat = (typeof sliceFormatState !== 'undefined' && sliceFormatState ? getBulkSliceFormat('Nike App') : 'PNG').toLowerCase();
+    var targetedEmailFormat = (typeof sliceFormatState !== 'undefined' && sliceFormatState ? getBulkSliceFormat('Nike Email') : 'PNG').toLowerCase();
+    document.getElementById('fp-app').innerHTML = '<span>'+targetedPrefix+'</span>_Launch_Nike App_[Inbox]_300x300'+(appScale > 1 ? '@'+appScale+'x' : '')+'.'+targetedAppFormat;
+    document.getElementById('fp-email').innerHTML = '<span>'+targetedPrefix+'</span>_Reminder_Nike Email_[Supporting 1]_375x375@2x.'+targetedEmailFormat;
+    document.getElementById('fp-comp').innerHTML = '<span>'+targetedPrefix+'</span>_Reminder_Nike Email_NZ_COMP@2x.png';
+    return;
+  }
+
+  document.getElementById('fp-app').innerHTML =
+    '<span>'+prefix+'</span>_Nike App_Inbox_300x300'+(appScale > 1 ? '@'+appScale+'x' : '')+'.'+fmt;
+  document.getElementById('fp-email').innerHTML =
+    '<span>'+prefix+'</span>_Nike Email_DT Hero_640x853@2x.'+fmt;
+  document.getElementById('fp-comp').innerHTML =
+    '<span>'+prefix+'</span>_Nike App_Inbox_Comp@2x.'+fmt;
+}
+
+function onFileSetupChange() {
+  var midSeason = document.getElementById('file-setup').value === 'mid-season-promo';
+  var targeted = document.getElementById('file-setup').value === 'targeted-comms';
+  var nsp = document.getElementById('file-setup').value === 'nsp-store-appearance';
+  var flexible = targeted || midSeason || nsp;
+  resetScaleControls(document.getElementById('file-setup').value);
+  document.getElementById('file-setup-hint').textContent = nsp
+    ? (nspManualMode ? 'Manual NSP file detected. Campaign identity comes from the Figma filename and slash-named delivery containers are scanned directly.' : 'Exports CXP, split IG-FB Story / TikTok motion, Nike Email and Retailors Email from one NSP campaign section. Client Review [SEND] markers are optional.') : midSeason
+    ? 'Choose the latest Client Review page. Slices are read from canonical “/ Slices /” source names in Design Space; tags are not required.' : targeted
+    ? 'Choose the combined Client Review page. Each detected send and Email market is preserved as a separate export folder.'
+    : 'Comps come from the selected Theme; slices come from its matching Design Space section.';
+  document.getElementById('scan-btn').textContent = flexible ? 'Scan sources' : 'Scan theme';
+  document.getElementById('step2-label').textContent = flexible ? 'Step 2 — Export sources' : 'Step 2 — Theme';
+  document.getElementById('page-hint').textContent = nsp
+    ? (nspManualMode ? 'Choose the page containing CXP / Comps, CXP / Slices, Nike Email / Slices, or Social + Paid Media.' : 'Choose Client Review. With one Design Space [PHASE], all review comps are assigned automatically.') : midSeason
+    ? 'Choose 👀 Client Review R4 (or the current review round). Phase, channel, audience and asset type are parsed from existing source paths.' : flexible
+    ? 'Choose 👀 Client Review. The plugin discovers matching send pages and keeps every send in a separate folder.'
+    : 'Choose the Theme containing final Comps and tagged copy. Slices are automatically read from the matching Week section in 🎨 Design Space.';
+  document.getElementById('tab-slices').style.display = '';
+  document.getElementById('mid-season-phase-block').style.display = midSeason ? '' : 'none';
+  document.getElementById('nsp-delivery-block').style.display = nsp && !nspManualMode ? '' : 'none';
+  document.getElementById('app-slices-scale').style.display = '';
+  document.getElementById('email-slices-scale').style.display = '';
+  document.getElementById('app-slices-format').style.display = targeted ? '' : 'none';
+  document.getElementById('email-slices-format').style.display = targeted ? '' : 'none';
+  document.getElementById('fp-app-label').textContent = midSeason ? 'Nike App Comp' : 'Nike App Slice';
+  document.getElementById('fp-email-label').textContent = midSeason ? 'Nike Email Comp' : 'Nike Email Slice';
+  document.getElementById('comp-source-notice').innerHTML = nsp
+    ? '<strong>NSP comps:</strong> export CXP DT/MB at @1x and Nike Email / Retailors Email at @2x. Social Motion has no comp. A single Design Space <strong>[PHASE]</strong> is assigned automatically.' : midSeason
+    ? '<strong>Mid Season source:</strong> comps and copy are read from canonical <strong>Phase / Channel / … / Comps / filename</strong> names on the selected Client Review page.' : flexible
+    ? '<strong>Combined review source:</strong> sends are read from Design Space. For scalable horizontal or vertical layouts, name one existing heading per block <strong>[SEND] Send name</strong>; following comps inherit that send until the next marker. Legacy parent, Divider, and position detection remains supported.'
+    : '<strong>Comp and copy source:</strong> the selected Theme. Start final comps with <strong>[COMP]</strong>. Tagged copy and visible text inside “Shopping With Us is Easy” are added to the Word documents when copy export is enabled.';
+  document.getElementById('slice-source-notice').innerHTML = nsp
+    ? '<strong>NSP assets:</strong> delivery assets are read from CXP Assets, Social Motion and Email beneath the single Design Space campaign section. Social Motion supports separate <strong>IG-FB Story</strong> and <strong>TikTok</strong> frames.' : midSeason
+    ? '<strong>Mid Season slices:</strong> canonical <strong>Phase / Channel / … / Slices / filename</strong> sources are discovered in Design Space. App Inbox, App Spotlight and approved Phase 1 Nike.com groups stay at native size; Paid Media remains @1x. Every actual 2x export, including Nike.com assets such as Belloti Swoosh, is marked @2x.' : flexible
+    ? '<strong>Supporting asset source:</strong> matching send sections in Design Space. Hero, Supporting, Inbox and GIF assets are classified from their send and channel ancestry; responsive assets with the same label remain separate by dimensions.'
+    : '<strong>Slice source:</strong> the matching Week section in Design Space. The App or Email section sets the channel. Shared “Shopping With Us is Easy” assets are detected from the component automatically. Hidden or locked items and working frames named “Frame” are excluded.';
+  S.slicesFrames = [];
+  S.compsFrames = [];
+  S.selSlices = {};
+  S.selComps = {};
+  document.getElementById('slices-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">Scan a page first</div>';
+  document.getElementById('comps-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">Scan a page first</div>';
+  document.getElementById('slices-count').textContent = '0';
+  document.getElementById('comps-count').textContent = '0';
+  updateBtn();
+  updatePreview();
+}
+
+// ── Copy mode ─────────────────────────────────
+document.getElementById('co-extract').addEventListener('click', function() {
+  document.getElementById('co-extract').classList.add('on');
+  document.getElementById('co-skip').classList.remove('on');
+  S.copyMode = 'extract';
+});
+document.getElementById('co-skip').addEventListener('click', function() {
+  document.getElementById('co-skip').classList.add('on');
+  document.getElementById('co-extract').classList.remove('on');
+  S.copyMode = 'skip';
+});
+
+function renderFrames(frames, containerId, selObj, countId, fmtMap, preserveSelections) {
+  document.getElementById(countId).textContent = frames.length;
+  var container = document.getElementById(containerId);
+  if (!frames.length) {
+    container.innerHTML = '<div style="text-align:center;padding:18px;color:var(--mut);font-size:10px">No frames found — make sure frames have [Nike App] or [Nike Email] tags, or are inside a matching section</div>';
+    return;
+  }
+  var groups = {}, groupOrder = [], groupLabels = {};
+  for (var i = 0; i < frames.length; i++) {
+    var f = frames[i];
+    var channel = f.channel || 'Nike App';
+    var audienceLabel = (f.audienceParts && f.audienceParts.length) ? f.audienceParts.join(' / ') : null;
+    var key = audienceLabel ? audienceLabel + ' | ' + channel : channel;
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); groupLabels[key] = key; }
+    groups[key].push(f);
+    if (!preserveSelections) selObj[f.id] = true;
+    if (!fmtMap[f.id]) fmtMap[f.id] = getInitialExportFormat(f);
+  }
+  var html = '';
+  for (var g = 0; g < groupOrder.length; g++) {
+    var gKey    = groupOrder[g];
+    var gFrames = groups[gKey];
+    html += '<div class="sh">'+groupLabels[gKey]+'</div><div class="flist">';
+    for (var j = 0; j < gFrames.length; j++) {
+      var fr       = gFrames[j];
+      var cls      = fr.isComp ? ' comp' : (fr.isGif ? ' gif' : '');
+      var tagHtml  = fr.isComp ? '<span class="tag tc">COMP</span>' : (fr.isGif ? '<span class="tag tg">GIF</span>' : (fr.forcePng ? '<span class="tag tc">PNG</span>' : ''));
+      var scales   = getFrameScales(fr);
+      var scaleStr = '@' + scales.join('/') + 'x';
+      var frKey = (fr.audienceParts||[]).join('|') + '|' + (fr.channel || 'Nike App') + '|' + (fr.isComp ? 'comp' : 'slice');
+      var frFolderCount = gFrames.filter(function(x) {
+        return ((x.audienceParts||[]).join('|') + '|' + (x.channel || 'Nike App') + '|' + (x.isComp ? 'comp' : 'slice')) === frKey;
+      }).length;
+      var subfolder = getSubfolder(fr, frFolderCount);
+      var curFmt   = fmtMap[fr.id] || getInitialExportFormat(fr);
+      var fmtSelect = fr.isGif || (fr.fileSetup === 'mid-season-promo' && fr.isComp) ? '' :
+        '<select class="fmt-sel" data-id="'+fr.id+'" onclick="event.stopPropagation()">' +
+        ['JPG','PNG','PDF'].map(function(o) {
+          return '<option value="'+o+'"'+(curFmt===o?' selected':'')+'>'+o+'</option>';
+        }).join('') + '</select>';
+      var displayLabel = (fr.label && fr.label.length) ? fr.label : (fr.channel === 'Nike Email' ? 'Email' : 'App');
+      html += '<div class="fi'+(selObj[fr.id]?' sel':'')+cls+'" data-id="'+fr.id+'">' +
+        '<div class="fchk">'+(selObj[fr.id]?'✓':'')+'</div>' +
+        '<div class="fi-inf">' +
+          '<div class="fi-n">'+displayLabel+'</div>' +
+          '<div class="fi-p">→ '+subfolder+'</div>' +
+        '</div>' +
+        '<div class="fi-m">'+tagHtml+fmtSelect+'<span class="fi-d">'+fr.width+'×'+fr.height+' '+scaleStr+'</span></div>' +
+        '</div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('.fi').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var id = item.dataset.id;
+      if (selObj[id]) { delete selObj[id]; item.classList.remove('sel'); item.querySelector('.fchk').textContent = ''; }
+      else { selObj[id] = true; item.classList.add('sel'); item.querySelector('.fchk').textContent = '✓'; }
+      updateBtn();
+    });
+  });
+  container.querySelectorAll('.fmt-sel').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+      setFrameExportFormat(fmtMap, sel.dataset.id, sel.value);
+    });
+  });
+}
+
+function selAll(frames, selObj, containerId) {
+  frames.forEach(function(f) { selObj[f.id] = true; });
+  document.querySelectorAll('#'+containerId+' .fi').forEach(function(el) { el.classList.add('sel'); el.querySelector('.fchk').textContent = '✓'; });
+  updateBtn();
+}
+function selNone(frames, selObj, containerId) {
+  frames.forEach(function(f) { delete selObj[f.id]; });
+  document.querySelectorAll('#'+containerId+' .fi').forEach(function(el) { el.classList.remove('sel'); el.querySelector('.fchk').textContent = ''; });
+  updateBtn();
+}
+
+document.getElementById('sl-all').addEventListener('click', function() { selAll(S.slicesFrames, S.selSlices, 'slices-list'); });
+document.getElementById('sl-none').addEventListener('click', function() { selNone(S.slicesFrames, S.selSlices, 'slices-list'); });
+document.getElementById('co-all').addEventListener('click', function() { selAll(S.compsFrames, S.selComps, 'comps-list'); });
+document.getElementById('co-none').addEventListener('click', function() { selNone(S.compsFrames, S.selComps, 'comps-list'); });
+
+function isSelectedCopyTab() {
+  var tab = document.querySelector('.tab[data-tab="copy"]');
+  return !!tab && tab.classList.contains('on');
+}
+
+function renderSelectedCopyFrames() {
+  var frames = S.selectedCopyFrames;
+  document.getElementById('selected-copy-count').textContent = frames.length;
+  var container = document.getElementById('selected-copy-list');
+  if (!frames.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">No semantic copy found in the current selection</div>';
+    updateBtn();
+    return;
+  }
+  var channels = ['Nike Email', 'Retailors Email', 'Nike App', 'Unclassified'];
+  container.innerHTML = '<div class="flist">' + frames.map(function(frame) {
+    var selected = !!S.selSelectedCopy[frame.id];
+    var options = channels.map(function(channel) {
+      return '<option value="'+esc(channel)+'"'+(frame.channel === channel ? ' selected' : '')+'>'+esc(channel)+'</option>';
+    }).join('');
+    return '<div class="fi'+(selected ? ' sel' : '')+'" data-id="'+esc(frame.id)+'">' +
+      '<div class="fchk">'+(selected ? '✓' : '')+'</div>' +
+      '<div class="fi-inf"><div class="fi-n">'+esc(frame.name)+'</div>' +
+      '<div class="fi-p">'+frame.layers.length+' copy field'+(frame.layers.length === 1 ? '' : 's')+'</div></div>' +
+      '<div class="fi-m"><select class="selected-copy-channel" data-id="'+esc(frame.id)+'" onclick="event.stopPropagation()">'+options+'</select></div>' +
+      '</div>';
+  }).join('') + '</div>';
+  container.querySelectorAll('.fi').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var id = item.dataset.id;
+      if (S.selSelectedCopy[id]) { delete S.selSelectedCopy[id]; item.classList.remove('sel'); item.querySelector('.fchk').textContent = ''; }
+      else { S.selSelectedCopy[id] = true; item.classList.add('sel'); item.querySelector('.fchk').textContent = '✓'; }
+      updateBtn();
+    });
+  });
+  container.querySelectorAll('.selected-copy-channel').forEach(function(select) {
+    select.addEventListener('change', function() {
+      var frame = S.selectedCopyFrames.filter(function(item) { return item.id === select.dataset.id; })[0];
+      if (frame) frame.channel = select.value;
+      updateBtn();
+    });
+  });
+  updateBtn();
+}
+
+function requestSelectedCopyScan() {
+  document.getElementById('selected-copy-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut);font-size:10px">Reading selected frames…</div>';
+  parent.postMessage({ pluginMessage: { type: 'SCAN_SELECTED_COPY' } }, '*');
+}
+
+document.getElementById('selected-copy-refresh').addEventListener('click', requestSelectedCopyScan);
+document.getElementById('selected-copy-all').addEventListener('click', function() {
+  S.selectedCopyFrames.forEach(function(frame) { S.selSelectedCopy[frame.id] = true; });
+  renderSelectedCopyFrames();
+});
+document.getElementById('selected-copy-none').addEventListener('click', function() {
+  S.selSelectedCopy = {};
+  renderSelectedCopyFrames();
+});
+
+document.getElementById('sl-refresh').addEventListener('click', function() {
+  var pageId = document.getElementById('campaign-page').value;
+  if (!pageId) { alert('Select a Theme first.'); return; }
+  document.getElementById('slices-list').innerHTML = '<div style="text-align:center;padding:18px;color:var(--mut);font-size:10px">Refreshing…</div>';
+  pendingTargetedSliceScan = 'loading-slices';
+  updateBtn();
+  parent.postMessage({ pluginMessage: { type: 'SCAN_FRAMES', pageId: pageId, role: 'slices', fileSetup: document.getElementById('file-setup').value, options:getSourceOptions() } }, '*');
+});
+document.getElementById('co-refresh').addEventListener('click', function() {
+  var pageId = document.getElementById('campaign-page').value;
+  if (!pageId) { alert('Select a Theme first.'); return; }
+  document.getElementById('comps-list').innerHTML = '<div style="text-align:center;padding:18px;color:var(--mut);font-size:10px">Refreshing…</div>';
+  parent.postMessage({ pluginMessage: { type: 'SCAN_FRAMES', pageId: pageId, role: 'comps', fileSetup: document.getElementById('file-setup').value, options:getSourceOptions() } }, '*');
+});
+
+// ── Export button state ───────────────────────
+function updateBtn() {
+  var hasProj = document.getElementById('project-name').value.trim().length > 0;
+  var btn     = document.getElementById('exp-btn');
+  if (isSelectedCopyTab()) {
+    var selectedCopy = S.selectedCopyFrames.filter(function(frame) { return S.selSelectedCopy[frame.id]; });
+    var hasUnclassified = selectedCopy.some(function(frame) { return frame.channel === 'Unclassified'; });
+    btn.disabled = !(hasProj && selectedCopy.length && !hasUnclassified);
+    btn.title = hasUnclassified ? 'Assign a channel to every included frame.' : '';
+    btn.textContent = selectedCopy.length ? 'Export '+selectedCopy.length+' selected frames as copy ZIP' : 'Export copy ZIP';
+    return;
+  }
+  var hasNspDelivery = document.getElementById('file-setup').value !== 'nsp-store-appearance' ||
+    nspManualMode || document.getElementById('nsp-store').value.trim();
+  var total   = Object.keys(S.selSlices).length + Object.keys(S.selComps).length;
+  btn.disabled = !!pendingTargetedSliceScan || !(hasProj && hasNspDelivery && total > 0);
+  btn.title = pendingTargetedSliceScan ? 'Wait for the Slices scan to finish.' : '';
+  btn.textContent = pendingTargetedSliceScan ? 'Scanning slices…' : (total > 0 ? 'Export '+total+' frames as ZIP' : 'Export ZIP');
+}
+document.getElementById('project-name').addEventListener('input', updateBtn);
+document.getElementById('mid-season-phase').addEventListener('input', function() {
+  updatePreview();
+});
+document.getElementById('mid-season-folder-label').addEventListener('input', function() { this.dataset.edited = 'true'; });
+['nsp-store'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', updateBtn);
+});
+
+// ── Scan ──────────────────────────────────────
+document.getElementById('scan-btn').addEventListener('click', function() {
+  if (isSelectedCopyTab()) { requestSelectedCopyScan(); return; }
+  var pageId = document.getElementById('campaign-page').value;
+  if (!pageId) { alert('Select a Theme first.'); return; }
+  var fileSetup = document.getElementById('file-setup').value;
+  if (fileSetup === 'nsp-store-appearance' && !nspManualMode && !document.getElementById('nsp-store').value.trim()) {
+    alert('Enter the NSP audience / store name before scanning.');
+    return;
+  }
+  if (fileSetup === 'mid-season-promo' && !document.getElementById('mid-season-phase').value.trim()) {
+    alert('Enter one Mid Season phase to scan, for example Phase 2.');
+    return;
+  }
+  var sourceOptions = getSourceOptions();
+  pendingTargetedSliceScan = fileSetup === 'targeted-comms' || fileSetup === 'mid-season-promo' || fileSetup === 'nsp-store-appearance'
+    ? 'waiting-for-comps' : false;
+  updateBtn();
+  if (pendingTargetedSliceScan) {
+    parent.postMessage({ pluginMessage: { type: 'SCAN_FRAMES', pageId: pageId, role: 'comps', fileSetup: fileSetup, options:sourceOptions } }, '*');
+  } else {
+    parent.postMessage({ pluginMessage: { type: 'SCAN_FRAMES', pageId: pageId, role: 'slices', fileSetup: fileSetup, options:sourceOptions } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'SCAN_FRAMES', pageId: pageId, role: 'comps', fileSetup: fileSetup, options:sourceOptions } }, '*');
+  }
+  showTab(fileSetup === 'retention-offense' ? 'slices' : 'comps');
+});
+
+function getSourceOptions() {
+  return {
+    includeStreamPages: true,
+    includeDesignSpace: true,
+    selectedPhase: document.getElementById('file-setup').value === 'mid-season-promo'
+      ? document.getElementById('mid-season-phase').value.trim() : '',
+    nspStore: document.getElementById('nsp-store').value.trim()
+  };
+}
+
+// ── Build export jobs ─────────────────────────
+var copyTimeoutId = null;
+var pendingTargetedSliceScan = false;
+
+document.getElementById('exp-btn').addEventListener('click', function() {
+  if (isSelectedCopyTab()) { exportSelectedCopyZip(); return; }
+  var date = document.getElementById('export-date').value.trim();
+  var code = document.getElementById('campaign-code').value.trim();
+  var proj = document.getElementById('project-name').value.trim();
+  var jobs = [];
+  if (document.getElementById('file-setup').value === 'mid-season-promo' && !document.getElementById('mid-season-phase').value.trim()) {
+    alert('Enter one Mid Season phase before exporting.');
+    return;
+  }
+  if (document.getElementById('file-setup').value === 'retention-offense' && !code) {
+    alert('Campaign code is required before exporting Retention Offense.');
+    return;
+  }
+  if (document.getElementById('file-setup').value === 'retention-offense') {
+    var retentionWarnings = [];
+    ['Nike Email', 'Nike App'].forEach(function(channel) {
+      var channelSlices = S.slicesFrames.filter(function(frame) { return frame.channel === channel; });
+      if (channel === 'Nike Email' && channelSlices.length && !channelSlices.some(function(frame) { return /hero/i.test(frame.name || ''); })) {
+        retentionWarnings.push(channel + ': missing Hero');
+      }
+      var exactNames = {};
+      channelSlices.forEach(function(frame) {
+        if (frame.isShoppingTout || /shopping\s+with\s+us\s+is\s+easy/i.test(frame.name || '')) return;
+        var key = (frame.name || '').replace(/\[[^\]]+\]/g, '').trim().toLowerCase();
+        exactNames[key] = (exactNames[key] || 0) + 1;
+      });
+      Object.keys(exactNames).forEach(function(name) {
+        if (name && exactNames[name] > 1) retentionWarnings.push(channel + ': duplicate “' + name + '”');
+      });
+      ['Header', 'Footer', 'Inbox'].forEach(function(type) {
+        var count = channelSlices.filter(function(frame) { return new RegExp(type, 'i').test(frame.name || ''); }).length;
+        if (count > 1) retentionWarnings.push(channel + ': multiple ' + type + ' assets');
+      });
+    });
+    if (retentionWarnings.length) alert('Export warnings (export will continue):\n\n• ' + retentionWarnings.join('\n• '));
+  }
+
+  // Reset state for fresh export
+  pendingResults = null;
+  streamedResults = [];
+  chunkedExportResults = {};
+  pendingResultConversions = 0;
+  exportBatchComplete = false;
+  activeExportJobs = [];
+  pendingCopy    = null;
+  copyReceived   = false;
+  exportStartedAt = Date.now();
+  copyStartedAt = 0;
+  exportTimings = { exportWallMs: 0, rasterWorkMs: 0, transportMs: 0, copyMs: 0, zipMs: 0, totalMs: 0 };
+  receivedTransportMs = 0;
+
+  function makeFilename(f, scale) {
+    var cStr    = code ? '['+code+']' : '';
+    var label   = f.label;
+    var ch      = f.channel || 'Nike App';
+    var dim     = f.width + 'x' + f.height;
+    var scaleSuffix = scale > 1 ? '@' + scale + 'x' : '';
+    var dimScale = dim + (scaleSuffix ? scaleSuffix : '');
+
+    // Build audience string — drop any part already contained in project name
+    var audienceParts = f.audienceParts || [];
+    var projLower = (proj || '').toLowerCase();
+    var filteredAudience = audienceParts.filter(function(part) {
+      return projLower.indexOf(part.toLowerCase()) === -1;
+    });
+    var audience = filteredAudience.length ? filteredAudience.join('_') : null;
+    var deliveryParts = (f.deliveryName || '').split('|').map(function(part) {
+      return part.trim();
+    }).filter(Boolean);
+
+    var leadingParts = [[date, cStr || null, proj].filter(Boolean).join(' ')];
+    if (f.fileSetup === 'mid-season-promo') {
+      return makeMidSeasonFilename(f, scale, date);
+    }
+    if (f.fileSetup === 'targeted-comms') {
+      return makeTargetedFilename(f, scale, date, code, proj);
+    }
+    if (f.fileSetup === 'nsp-store-appearance') {
+      if (f.nspManual) return makeManualNspFilename(f, scale, date, code, proj);
+      return makeNspFilename(f, scale, date, code, proj);
+    }
+    if (f.isGif) {
+      var parts = leadingParts.concat(deliveryParts).concat([audience||null, ch, label||null, dimScale]).filter(Boolean);
+      return parts.join('_');
+    }
+    if (f.isComp) {
+      var compLabel = label || 'COMP';
+      return leadingParts.concat(deliveryParts).concat([audience||null, ch, compLabel, dimScale]).filter(Boolean).join('_');
+    }
+    var parts = leadingParts.concat(deliveryParts).concat([audience||null, ch, label||null, dimScale]).filter(Boolean);
+    return parts.join('_');
+  }
+
+  var usedOutputPaths = {};
+  function addJobs(frames, selObj, fmtMap) {
+    var folderCounts = {};
+    for (var i = 0; i < frames.length; i++) {
+      var f = frames[i];
+      if (!selObj[f.id]) continue;
+      // Figma's plugin API cannot render MP4. Do not misrepresent a static
+      // Social Motion preview as the final delivery; tryZip adds a reminder.
+      if (f.fileSetup === 'nsp-store-appearance' && f.channel === 'Social Motion') continue;
+      var fKey = (f.audienceParts||[]).join('|') + '|' + (f.channel || 'Nike App') + '|' + (f.isComp ? 'comp' : 'slice');
+      folderCounts[fKey] = (folderCounts[fKey] || 0) + 1;
+    }
+    for (var i = 0; i < frames.length; i++) {
+      var f = frames[i];
+      if (!selObj[f.id]) continue;
+      if (f.fileSetup === 'nsp-store-appearance' && f.channel === 'Social Motion') continue;
+      var fKey      = (f.audienceParts||[]).join('|') + '|' + (f.channel || 'Nike App') + '|' + (f.isComp ? 'comp' : 'slice');
+      var subfolder = getSubfolder(f, folderCounts[fKey]);
+      var scales    = getFrameScales(f);
+      var selectedFormat = (fmtMap && fmtMap[f.id]) ? fmtMap[f.id] : null;
+      for (var s = 0; s < scales.length; s++) {
+        var outputFormat = getJobExportFormat(f, selectedFormat);
+        var baseFilename = makeFilename(f, scales[s]);
+        var filename = getUniqueOutputFilename(baseFilename, subfolder, outputFormat.toLowerCase(), usedOutputPaths);
+        jobs.push({
+          frameId:   f.exportNodeId || f.id,
+          frameName: f.name,
+          label:     f.label || f.name,
+          filename:  filename,
+          fallbackFilename: f.isGif ? filename + '_[GIF TO BE EXPORTED]' : null,
+          subfolder: subfolder,
+          format:    outputFormat,
+          scale:     scales[s],
+          isComp:    f.isComp,
+          isGif:     f.isGif,
+          detectGif: f.detectGif === true,
+          width:     f.width,
+          height:    f.height,
+          channel:   f.channel,
+          phase:     f.phase,
+          market:    f.market || '',
+          pageId:    f.pageId,
+          fileSetup: f.fileSetup,
+          deliveryName: f.deliveryName
+        });
+
+        // Retention GIF Heroes require a separately delivered still image.
+        // Keep the GIF/fallback job intact and add the Retention-only clean
+        // Hero still as an independent JPG delivery file.
+        var stillFrame = getRetentionGifStillFrame(f);
+        if (stillFrame) {
+          var stillBaseFilename = makeFilename(stillFrame, scales[s]);
+          var stillFilename = getUniqueOutputFilename(stillBaseFilename, subfolder, 'jpg', usedOutputPaths);
+          jobs.push({
+            frameId:   stillFrame.exportNodeId || stillFrame.id,
+            frameName: stillFrame.name,
+            label:     stillFrame.label || stillFrame.name,
+            filename:  stillFilename,
+            subfolder: subfolder,
+            format:    'JPG',
+            scale:     scales[s],
+            isComp:    false,
+            isGif:     false,
+            width:     stillFrame.width,
+            height:    stillFrame.height,
+            channel:   stillFrame.channel,
+            pageId:    stillFrame.pageId,
+            fileSetup: stillFrame.fileSetup,
+            deliveryName: stillFrame.deliveryName
+          });
+        }
+      }
+    }
+  }
+
+  addJobs(S.slicesFrames, S.selSlices, S.fmtSlices);
+  addJobs(S.compsFrames,  S.selComps,  S.fmtComps);
+  var selectedTargetedComps = S.compsFrames.filter(function(frame) { return S.selComps[frame.id]; });
+  jobs = expandTargetedEmailSliceJobs(jobs, getTargetedEmailMarketsByPhase(selectedTargetedComps));
+  if (jobs.some(function(job) {
+    return job.fileSetup === 'targeted-comms' && job.channel === 'Nike Email' && !job.isComp && !job.market;
+  })) {
+    alert('Could not determine an Email market for the selected NVS slices. Add an AU, NZ, or other market Email comp for this send, then scan again.');
+    updateBtn();
+    return;
+  }
+  if (!jobs.length) return;
+  activeExportJobs = jobs.slice();
+
+  document.getElementById('prog-blk').style.display = 'block';
+  document.getElementById('res-blk').style.display  = 'none';
+  document.getElementById('exp-btn').disabled = true;
+  document.getElementById('prog-txt').textContent = 'Exporting '+jobs.length+' files…';
+  parent.postMessage({ pluginMessage: { type: 'EXPORT_BATCH', jobs: jobs } }, '*');
+});
+
+// ── Messages from plugin ──────────────────────
+var pendingResults  = null;
+var streamedResults = [];
+var chunkedExportResults = {};
+var pendingCopy     = null;
+var copyReceived    = false; // true once COPY_RESULT arrives or copy is skipped
+var sourceFigmaFileName = '';
+var nspManualMode = false;
+var exportStartedAt = 0;
+var copyStartedAt = 0;
+var exportTimings = { exportWallMs: 0, rasterWorkMs: 0, transportMs: 0, copyMs: 0, zipMs: 0, totalMs: 0 };
+var receivedTransportMs = 0;
+var pendingResultConversions = 0;
+var exportBatchComplete = false;
+var activeExportJobs = [];
+
+function loadPlaceholderImage(bytes) {
+  return new Promise(function(resolve, reject) {
+    var blob = new Blob([bytes], { type: 'image/jpeg' });
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.onload = function() { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('Could not decode GIF placeholder JPG')); };
+    img.src = url;
+  });
+}
+
+function canvasToJpegBytes(canvas) {
+  return new Promise(function(resolve, reject) {
+    canvas.toBlob(function(blob) {
+      if (!blob) { reject(new Error('Could not encode annotated GIF placeholder')); return; }
+      blob.arrayBuffer().then(function(buffer) { resolve(new Uint8Array(buffer)); }, reject);
+    }, 'image/jpeg', 0.92);
+  });
+}
+
+async function annotateGifPlaceholder(result) {
+  if (!result || !result.success || !result.isPlaceholder || !result.placeholderAnnotation) return result;
+  var img = await loadPlaceholderImage(result.bytes);
+  var canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  var headlineSize = Math.max(14, Math.round(Math.min(canvas.width, canvas.height) * 0.055));
+  var detailSize = Math.max(9, Math.round(headlineSize * 0.62));
+  var overlayHeight = Math.max(64, Math.round(headlineSize * 3.4));
+  var overlayY = Math.max(0, canvas.height - overlayHeight);
+  ctx.fillStyle = 'rgba(0,0,0,0.82)';
+  ctx.fillRect(0, overlayY, canvas.width, overlayHeight);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold ' + headlineSize + 'px Arial, sans-serif';
+  ctx.fillText('GIF TO BE EXPORTED', canvas.width / 2, overlayY + headlineSize * 1.15, canvas.width - 24);
+
+  var intendedName = result.intendedGifFilename || '';
+  ctx.font = detailSize + 'px Arial, sans-serif';
+  while (detailSize > 7 && ctx.measureText(intendedName).width > canvas.width - 24) {
+    detailSize--;
+    ctx.font = detailSize + 'px Arial, sans-serif';
+  }
+  ctx.fillText(intendedName, canvas.width / 2, overlayY + overlayHeight - headlineSize * 0.75, canvas.width - 24);
+  result.bytes = await canvasToJpegBytes(canvas);
+  return result;
+}
+
+function queueExportResult(result) {
+  pendingResultConversions++;
+  annotateGifPlaceholder(result).catch(function(error) {
+    result.success = false;
+    result.error = 'GIF fallback annotation failed: ' + (error && (error.message || String(error)));
+    result.bytes = null;
+    return result;
+  }).then(function(convertedResult) {
+    streamedResults.push(convertedResult);
+    pendingResultConversions--;
+    if (pendingResultConversions === 0 && exportBatchComplete) {
+      exportBatchComplete = false;
+      finishExportBatch();
+    }
+  });
+}
+
+function getIncompleteNvsJobs(exportJobs, results) {
+  var resultsByIndex = {};
+  for (var resultIndex = 0; resultIndex < (results || []).length; resultIndex++) {
+    var result = results[resultIndex];
+    if (result && result.exportIndex !== undefined) resultsByIndex[result.exportIndex] = result;
+  }
+  var incomplete = [];
+  for (var jobIndex = 0; jobIndex < (exportJobs || []).length; jobIndex++) {
+    var job = exportJobs[jobIndex];
+    if (!job || (job.fileSetup !== 'targeted-comms' && job.fileSetup !== 'mid-season-promo')) continue;
+    var matchingResult = resultsByIndex[jobIndex];
+    if (!matchingResult || !matchingResult.success) incomplete.push(job.label || job.frameName || job.filename || ('Slice ' + (jobIndex + 1)));
+  }
+  return incomplete;
+}
+
+function stopIncompleteNvsExport(incompleteJobs) {
+  pendingResults = null;
+  copyReceived = false;
+  document.getElementById('prog-blk').style.display = 'none';
+  document.getElementById('res-blk').style.display = 'block';
+  document.getElementById('res-title').textContent = 'Export stopped';
+  document.getElementById('res-list').innerHTML = '';
+  var notice = document.getElementById('res-notice');
+  notice.style.display = 'block';
+  notice.className = 'notice nw';
+  notice.textContent = 'Selected files were missing or failed: ' + incompleteJobs.join(', ') + '. No partial ZIP was downloaded.';
+  updateBtn();
+}
+
+function finishExportBatch() {
+  pendingResults = streamedResults.slice().sort(function(a, b) {
+    return (a.exportIndex === undefined ? 0 : a.exportIndex) - (b.exportIndex === undefined ? 0 : b.exportIndex);
+  });
+  streamedResults = [];
+  var incompleteNvsJobs = getIncompleteNvsJobs(activeExportJobs, pendingResults);
+  if (incompleteNvsJobs.length) {
+    stopIncompleteNvsExport(incompleteNvsJobs);
+    return;
+  }
+  if (S.copyMode === 'skip' || !document.querySelector('#co-extract.on')) {
+    copyReceived = true;
+    pendingCopy = null;
+    tryZip();
+    return;
+  }
+
+  var copyPageId = document.getElementById('campaign-page').value;
+  if (!copyPageId) {
+    copyReceived = true;
+    pendingCopy = null;
+    tryZip();
+    return;
+  }
+
+  var fallbackFrames = getCopyFallbackFrames(S.compsFrames, S.slicesFrames, S.selComps, S.selSlices);
+  var fallbackFrameIds = fallbackFrames.map(function(f) { return f.exportNodeId || f.id; });
+  var fallbackChannels = {};
+  var fallbackCopyMeta = {};
+  fallbackFrames.forEach(function(f) {
+    var fallbackNodeId = f.exportNodeId || f.id;
+    fallbackChannels[fallbackNodeId] = f.channel || 'Nike App';
+    fallbackCopyMeta[fallbackNodeId] = {
+      phase: f.phase || ((f.audienceParts || [])[0]) || '',
+      type: f.fileSetup === 'mid-season-promo' ? (f.midSeasonCopyGroup || '') : getTargetedFolderChannel(f.name, f.channel, f.deliveryType),
+      market: f.market || ''
+    };
+  });
+  document.getElementById('prog-txt').textContent = 'Extracting copy…';
+  copyStartedAt = Date.now();
+  copyTimeoutId = setTimeout(function() {
+    if (!copyReceived) {
+      copyReceived = true;
+      pendingCopy = null;
+      exportTimings.copyMs = copyStartedAt ? Date.now() - copyStartedAt : 0;
+      tryZip();
+    }
+  }, 10000);
+  var assetReferences = S.slicesFrames.filter(function(f) {
+    return f.assetLabel && !f.isShoppingTout;
+  }).map(function(f, sourceOrder) {
+    return {
+      panel: f.assetPanel || null,
+      assetLabel: f.assetReferenceLabel || f.assetLabel,
+      assetGroup: f.assetGroup || null,
+      channel: f.channel,
+      phase: f.phase || ((f.audienceParts || [])[0]) || '',
+      copyType: getTargetedFolderChannel(f.name, f.channel, f.deliveryType),
+      targetComp: f.assetTarget || null,
+      market: f.market || '',
+      absoluteX: f.absoluteX,
+      absoluteY: f.absoluteY,
+      sourceOrder: sourceOrder,
+      isShoppingTout: false
+    };
+  });
+  parent.postMessage({ pluginMessage: { type: 'EXTRACT_COPY_SOURCE', pageId: copyPageId, fileSetup: document.getElementById('file-setup').value, nspManual: fallbackFrames.some(function(frame) { return frame.nspManual; }), fallbackFrameIds: fallbackFrameIds, frameChannels: fallbackChannels, frameCopyMeta: fallbackCopyMeta, assetReferences: assetReferences } }, '*');
+}
+
+window.onmessage = function(event) {
+  var msg = event.data.pluginMessage;
+  if (!msg) return;
+
+  if (msg.type === 'PAGES_RESULT') {
+    var none = '<option value="">— Select page —</option>';
+    var opts = '';
+    for (var i = 0; i < msg.pages.length; i++) {
+      opts += '<option value="'+msg.pages[i].id+'">'+msg.pages[i].name+' ('+msg.pages[i].frameCount+')</option>';
+    }
+    document.getElementById('campaign-page').innerHTML = none + opts;
+    var fileName = msg.fileName || '';
+    sourceFigmaFileName = fileName;
+    nspManualMode = !!msg.hasNspManualPage;
+    var fileMatch = fileName.match(/^\s*\[([^\]]+)\]\s*(.*?)(?:\s*\|\s*(?:Targeted Comms|Retention Offense).*)?$/i);
+    if (fileMatch) {
+      document.getElementById('campaign-code').value = fileMatch[1].trim();
+      if (fileMatch[2].trim()) document.getElementById('project-name').value = fileMatch[2].trim();
+    }
+    if (/\bNSP\b|store\s+(?:appearance|openings?)/i.test(fileName)) {
+      document.getElementById('file-setup').value = 'nsp-store-appearance';
+      onFileSetupChange();
+      var nspReviewPages = msg.pages.filter(function(page) { return /client\s+review/i.test(page.name || ''); });
+      var nspManualPages = msg.pages.filter(function(page) { return page.nspManual; });
+      if (nspReviewPages.length) document.getElementById('campaign-page').value = nspReviewPages[0].id;
+      else if (nspManualPages.length) document.getElementById('campaign-page').value = nspManualPages[0].id;
+      document.getElementById('nsp-delivery-block').style.display = nspManualMode ? 'none' : '';
+      if (nspManualMode) {
+        document.getElementById('file-setup-hint').textContent = 'Manual NSP file detected. Campaign identity comes from the Figma filename and slash-named delivery containers are scanned directly.';
+        document.getElementById('page-hint').textContent = 'Choose the page containing CXP / Comps, CXP / Slices, Nike Email / Slices, or Social + Paid Media.';
+      }
+      updatePreview(); updateBtn();
+    } else if (/mid[\s-]+season\s+promo/i.test(fileName)) {
+      document.getElementById('file-setup').value = 'mid-season-promo';
+      onFileSetupChange();
+      var reviewPages = msg.pages.filter(function(page) { return /client\s+review/i.test(page.name || ''); });
+      if (reviewPages.length) document.getElementById('campaign-page').value = reviewPages[0].id;
+      var codeMatch = fileName.match(/\[?(NIKRA\d+)\]?/i);
+      if (codeMatch) document.getElementById('campaign-code').value = codeMatch[1].toUpperCase();
+      document.getElementById('project-name').value = fileName.replace(/^\s*\[[^\]]+\]\s*/, '').replace(/\s*\|.*$/, '').trim();
+      updatePreview(); updateBtn();
+    } else if (!/retention\s+offense/i.test(fileName) && (msg.hasSendMarkers || /targeted\s+comms/i.test(fileName))) {
+      document.getElementById('file-setup').value = 'targeted-comms';
+      onFileSetupChange();
+      var clientReviewPage = msg.pages.filter(function(page) { return /client\s+review/i.test(page.name || ''); })[0];
+      if (clientReviewPage) document.getElementById('campaign-page').value = clientReviewPage.id;
+    } else {
+      updatePreview();
+      updateBtn();
+    }
+  }
+
+  if (msg.type === 'FRAMES_RESULT') {
+    if (msg.role === 'slices') {
+      pendingTargetedSliceScan = false;
+      S.slicesFrames = msg.frames.filter(function(f) { return !f.isComp; });
+      S.selSlices = {};
+      S.fmtSlices = {};
+      renderFrames(S.slicesFrames, 'slices-list', S.selSlices, 'slices-count', S.fmtSlices);
+    }
+    if (msg.role === 'comps') {
+      S.compsFrames = msg.frames.filter(function(f) { return f.isComp; });
+      S.selComps = {};
+      S.fmtComps = {};
+      renderFrames(S.compsFrames, 'comps-list', S.selComps, 'comps-count', S.fmtComps);
+      if (pendingTargetedSliceScan === 'waiting-for-comps') {
+        pendingTargetedSliceScan = 'loading-slices';
+        var targetedPageId = document.getElementById('campaign-page').value;
+        parent.postMessage({ pluginMessage: { type: 'SCAN_FRAMES', pageId: targetedPageId, role: 'slices', fileSetup: document.getElementById('file-setup').value, options:getSourceOptions() } }, '*');
+      }
+    }
+    updateBtn();
+  }
+
+  if (msg.type === 'SCAN_ERROR') {
+    pendingTargetedSliceScan = false;
+    var failedRole = msg.role === 'slices' ? 'slices' : 'comps';
+    if (failedRole === 'slices') { S.slicesFrames = []; S.selSlices = {}; }
+    else { S.compsFrames = []; S.selComps = {}; }
+    document.getElementById(failedRole + '-count').textContent = '0';
+    document.getElementById(failedRole + '-list').innerHTML = '<div style="color:var(--red);font-size:10px;padding:12px">'+esc(msg.message || 'Scan failed.')+'</div>';
+    updateBtn();
+  }
+
+  if (msg.type === 'SELECTED_COPY_RESULT') {
+    S.selectedCopyFrames = msg.frames || [];
+    S.selSelectedCopy = {};
+    S.selectedCopyFrames.forEach(function(frame) { S.selSelectedCopy[frame.id] = true; });
+    renderSelectedCopyFrames();
+    if (msg.error) document.getElementById('selected-copy-list').innerHTML = '<div style="color:var(--red);font-size:10px;padding:12px">'+esc(msg.error)+'</div>';
+  }
+
+  if (msg.type === 'COPY_RESULT') {
+    if (copyTimeoutId) { clearTimeout(copyTimeoutId); copyTimeoutId = null; }
+    pendingCopy  = msg.copyData;
+    copyReceived = true;
+    exportTimings.copyMs = copyStartedAt ? Date.now() - copyStartedAt : 0;
+    tryZip();
+  }
+
+  if (msg.type === 'PROGRESS') {
+    var pct = Math.round((msg.completed / msg.total) * 100);
+    document.getElementById('prog-fi').style.width = pct + '%';
+    document.getElementById('prog-lbl').textContent = msg.completed + '/' + msg.total;
+    if (msg.status) {
+      document.getElementById('prog-txt').textContent = msg.status;
+    }
+    if (msg.lastError) {
+      document.getElementById('prog-txt').textContent = '⚠ ' + msg.lastError;
+    }
+  }
+
+  if (msg.type === 'EXPORT_RESULT') {
+    if (msg.result && msg.result.transportSentAt) receivedTransportMs += Math.max(0, Date.now() - msg.result.transportSentAt);
+    queueExportResult(msg.result);
+  }
+
+  if (msg.type === 'EXPORT_RESULT_START') {
+    chunkedExportResults[msg.exportId] = {
+      result: msg.result,
+      byteLength: msg.byteLength,
+      chunks: []
+    };
+  }
+
+  if (msg.type === 'EXPORT_RESULT_CHUNK') {
+    var chunkedResult = chunkedExportResults[msg.exportId];
+    if (chunkedResult) chunkedResult.chunks.push(msg.bytes);
+  }
+
+  if (msg.type === 'EXPORT_RESULT_END') {
+    var completedChunkedResult = chunkedExportResults[msg.exportId];
+    if (completedChunkedResult) {
+      var combinedBytes = new Uint8Array(completedChunkedResult.byteLength);
+      var combinedOffset = 0;
+      completedChunkedResult.chunks.forEach(function(chunk) {
+        combinedBytes.set(chunk, combinedOffset);
+        combinedOffset += chunk.length;
+      });
+      completedChunkedResult.result.bytes = combinedBytes;
+      queueExportResult(completedChunkedResult.result);
+      delete chunkedExportResults[msg.exportId];
+      if (completedChunkedResult.result.transportSentAt) receivedTransportMs += Math.max(0, Date.now() - completedChunkedResult.result.transportSentAt);
+    }
+  }
+
+  if (msg.type === 'EXPORT_COMPLETE') {
+    exportTimings.exportWallMs = msg.timings && msg.timings.exportWallMs || 0;
+    exportTimings.rasterWorkMs = msg.timings && msg.timings.rasterWorkMs || 0;
+    exportTimings.transportMs = receivedTransportMs;
+    if (pendingResultConversions > 0) {
+      exportBatchComplete = true;
+      return;
+    }
+    finishExportBatch();
+  }
+};
+
+// ── XML escape ────────────────────────────────
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function wordTextRuns(runs, fallbackText) {
+  var source = runs && runs.length ? runs : [{ text: fallbackText || '', bold: false, italic: false, color: null }];
+  var xml = '';
+  for (var i = 0; i < source.length; i++) {
+    var run = source[i];
+    // Extraction sends a colour only for magenta source text. Validate the
+    // value at this boundary and force every other copy run to black.
+    var wordColor = String(run.color || '').toUpperCase() === 'FF00FF' ? 'FF00FF' : '000000';
+    var lines = String(run.text || '').replace(/\r\n?|\u2028|\u2029/g, '\n').split('\n');
+    for (var j = 0; j < lines.length; j++) {
+      if (j > 0) xml += '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:sz w:val="22"/></w:rPr><w:br/></w:r>';
+      xml += '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:sz w:val="22"/><w:color w:val="' + wordColor + '"/>' +
+        (run.bold ? '<w:b/>' : '') + (run.italic ? '<w:i/>' : '') +
+        '</w:rPr><w:t xml:space="preserve">'+esc(lines[j])+'</w:t></w:r>';
+    }
+  }
+  return xml;
+}
+
+function getStoreParagraphs(text) {
+  var normalised = String(text || '').replace(/\r\n?|\u2028|\u2029/g, '\n');
+  var storeMatches = normalised.match(/\bNike\s+(?:Factory|Clearance|Unite)\b/gi) || [];
+  if (storeMatches.length < 2) return null;
+  var blocks = normalised.split(/\n\s*\n+/).map(function(block) { return block.trim(); }).filter(Boolean);
+  return blocks.length > 1 ? blocks : null;
+}
+
+function storeParagraphsXml(layer) {
+  var blocks = getStoreParagraphs(layer.text);
+  if (!blocks) return null;
+  var xml = '';
+  for (var i = 0; i < blocks.length; i++) {
+    xml += '<w:p><w:pPr><w:spacing w:before="0" w:after="80"/></w:pPr>';
+    if (i === 0) {
+      xml += '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:sz w:val="22"/></w:rPr>' +
+        '<w:t xml:space="preserve">'+esc(layer.layer)+': </w:t></w:r>';
+    }
+    xml += wordTextRuns(null, blocks[i]) + '</w:p>';
+  }
+  return xml;
+}
+
+// Store carousel comps lay out all store names in one visual row and all
+// addresses in another, so canvas Y-order groups fields by type. Delivery
+// copy instead needs each store name immediately followed by its address.
+function sortNvsStoreCarouselLayers(layers) {
+  var isStoreCarousel = (layers || []).some(function(layer) {
+    return layer.isAsset && /^Carousel\s*2$/i.test(String(layer.assetGroup || '').trim());
+  });
+  if (!isStoreCarousel) return layers;
+
+  var assets = [], headlines = [], bodies = [], remainder = [];
+  (layers || []).forEach(function(layer) {
+    if (layer.isAsset) assets.push(layer);
+    else if (/^Headline$/i.test(layer.layer || '')) headlines.push(layer);
+    else if (/^Body copy$/i.test(layer.layer || '')) bodies.push(layer);
+    else remainder.push(layer);
+  });
+  if (!headlines.length || !bodies.length) return layers;
+
+  var ordered = assets.slice();
+  var leadingHeadlines = Math.max(0, headlines.length - bodies.length);
+  for (var leadIndex = 0; leadIndex < leadingHeadlines; leadIndex++) ordered.push(headlines[leadIndex]);
+  var pairCount = Math.max(headlines.length - leadingHeadlines, bodies.length);
+  for (var pairIndex = 0; pairIndex < pairCount; pairIndex++) {
+    if (headlines[leadingHeadlines + pairIndex]) ordered.push(headlines[leadingHeadlines + pairIndex]);
+    if (bodies[pairIndex]) ordered.push(bodies[pairIndex]);
+  }
+  return ordered.concat(remainder);
+}
+
+function isNvsDefaultCarouselAsset(layer) {
+  if (!layer || !layer.isAsset) return false;
+  var label = String(layer.assetLabel || '').replace(/^\[|\]$/g, '').trim();
+  return /^Carousel\s*\d*[\s-]+Default(?:\s*_\d+)?$/i.test(label);
+}
+
+function getNvsCarouselAssetDisplayLabel(layer) {
+  var label = String(layer && layer.assetLabel || '').replace(/^\[(.+)\]$/, '$1').trim();
+  var groupMatch = String(layer && layer.assetGroup || '').trim().match(/^Carousel\s*(\d+)$/i);
+  if (!groupMatch) return label;
+  var assetMatch = label.match(/^Carousel\s*\d*[\s-]+(.+)$/i);
+  if (!assetMatch) return label;
+  return 'Carousel' + groupMatch[1] + '-' + assetMatch[1];
+}
+
+// ── Build .docx via fflate ────────────────────
+function buildDocxBytes(copyData, projectName, date, campaignCode, deliveryName, copyStyleMode) {
+  var targetedFullCopy = copyStyleMode === 'nvs' || copyStyleMode === 'mid-season';
+  var nvsCopyStyle = copyStyleMode === 'nvs';
+  var formattedProject = (projectName || '').replace(/_/g, ' | ');
+
+  // Title uses the channel of the first frame (all frames in this group share the same channel)
+  var groupChannel = copyData.length ? (copyData[0].channel || '') : '';
+  var cleanCampaignCode = String(campaignCode || '').replace(/[\[\]]/g, '').trim();
+  var targetedCampaignTitle = [cleanCampaignCode && formattedProject.toLowerCase().indexOf(cleanCampaignCode.toLowerCase()) !== 0 ? cleanCampaignCode : null, formattedProject].filter(Boolean).join(' ');
+  var title = nvsCopyStyle
+    ? [targetedCampaignTitle, 'Targeted Comms'].filter(Boolean).join(' | ')
+    : targetedFullCopy ? formattedProject
+    : formattedProject + (groupChannel ? ' | ' + groupChannel : '') + (deliveryName ? ' | ' + deliveryName : '');
+
+  var body  = '';
+
+  // H1 title
+  body += '<w:p><w:pPr><w:pStyle w:val="H1"/></w:pPr>' +
+    '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:color w:val="'+(nvsCopyStyle ? '434343' : '000000')+'"/><w:sz w:val="28"/>'+(nvsCopyStyle ? '' : '<w:b/>')+'</w:rPr>' +
+    '<w:t>'+esc(title)+'</w:t></w:r></w:p>';
+  if (nvsCopyStyle) {
+    body += '<w:p><w:pPr><w:spacing w:after="240"/></w:pPr><w:r><w:pict><v:rect style="width:0pt;height:1.5pt" o:hr="t" o:hrstd="t" o:hralign="center" fillcolor="#A0A0A0" stroked="f"/></w:pict></w:r></w:p>';
+  }
+
+  // Render frames in order, showing channel H2 header whenever channel changes
+  var lastChannel = null;
+  for (var i = 0; i < copyData.length; i++) {
+    var fr  = copyData[i];
+    var ch  = fr.channel || 'Nike App';
+    var marketLabel = targetedFullCopy && ch === 'Nike Email' && fr.market ? ' ' + fr.market : '';
+    var sectionChannel = targetedFullCopy ? [fr.phase, ch + marketLabel].filter(Boolean).join(' — ') : ch;
+    if (sectionChannel !== lastChannel) {
+      body += '<w:p><w:pPr><w:pStyle w:val="H2"/><w:spacing w:before="'+(nvsCopyStyle ? '360' : '320')+'" w:after="80"/></w:pPr>' +
+        '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:sz w:val="'+(nvsCopyStyle ? '34' : '24')+'"/>'+(nvsCopyStyle ? '<w:u w:val="none"/>' : '')+'</w:rPr>' +
+        '<w:t>'+esc(sectionChannel)+'</w:t></w:r></w:p>';
+      lastChannel = sectionChannel;
+    }
+
+    var frameLabel = fr.cleanLabel || '';
+    if (targetedFullCopy && ch === 'Nike Email' && fr.market && frameLabel.toUpperCase() === fr.market.toUpperCase()) frameLabel = '';
+    if (frameLabel && frameLabel.toLowerCase() !== ch.toLowerCase()) {
+      body += '<w:p><w:pPr>'+(nvsCopyStyle ? '<w:pStyle w:val="H3"/>' : '')+'<w:spacing w:before="'+(nvsCopyStyle ? '280' : '200')+'" w:after="'+(nvsCopyStyle ? '240' : '40')+'"/></w:pPr>' +
+        '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:sz w:val="'+(nvsCopyStyle ? '26' : '22')+'"/></w:rPr>' +
+        '<w:t>'+esc(frameLabel)+'</w:t></w:r></w:p>';
+    }
+
+    // Authoring-only product carousels belong to their headline's panel.
+    // Render one plain descriptor below that headline, rather than creating
+    // an additional asset/copy panel for the authoring instruction.
+    var frameLayers = fr.layers;
+    if (!copyStyleMode && ch === 'Nike Email') {
+      frameLayers = fr.layers.map(function(layer) { return Object.assign({}, layer); });
+      frameLayers.forEach(function(layer) {
+        var value = [layer.text || '', layer.assetLabel || '', layer.layer || ''].join(' ');
+        if (!/dynamic\s+(?:assets?\s+to\s+be\s+added\s+through\s+authoring|product\s+carousel)/i.test(value)) return;
+        var headlines = frameLayers.filter(function(candidate) { return !candidate.isAsset && /^headline$/i.test(candidate.layer || ''); });
+        var headline = headlines.filter(function(candidate) { return candidate.panel === layer.panel; })[0];
+        if (!headline) {
+          headline = headlines.filter(function(candidate) { return typeof candidate.y === 'number' && candidate.y <= layer.y; })
+            .sort(function(a, b) { return b.y - a.y; })[0];
+        }
+        if (headline) layer.panel = headline.panel;
+        layer.dynamicProductCarousel = true;
+      });
+    }
+
+    // Text layers — grouped by panel
+    var panelGroups = {}, panelOrder = [];
+    for (var k = 0; k < frameLayers.length; k++) {
+      var layer = frameLayers[k];
+      var pKey  = layer.panel || '__none__';
+      // Email metadata is always the delivery document's first copy block,
+      // independent of the panel tag used in Figma.
+      if (!layer.isAsset && /^(subject( line)?|pre[- ]?header|preview text)$/i.test(layer.layer || '')) pKey = '__email_metadata__';
+      if (!panelGroups[pKey]) { panelGroups[pKey] = []; panelOrder.push(pKey); }
+      panelGroups[pKey].push(layer);
+    }
+    var metadataIndex = panelOrder.indexOf('__email_metadata__');
+    if (metadataIndex !== -1) {
+      panelOrder.splice(metadataIndex, 1);
+    }
+    // Automatic asset references may be merged before the extracted copy,
+    // so insertion order is not a reliable panel order. Always render P-tags
+    // numerically while keeping email metadata as the first document block.
+    panelOrder.sort(function(a, b) {
+      var aMatch = /^P(\d+)$/i.exec(a);
+      var bMatch = /^P(\d+)$/i.exec(b);
+      if (aMatch && bMatch) return parseInt(aMatch[1], 10) - parseInt(bMatch[1], 10);
+      if (aMatch) return -1;
+      if (bMatch) return 1;
+      return 0;
+    });
+    if (metadataIndex !== -1) panelOrder.unshift('__email_metadata__');
+
+    for (var p = 0; p < panelOrder.length; p++) {
+        var pKey    = panelOrder[p];
+        var pLayers = panelGroups[pKey];
+
+        if (pLayers.some(function(layer) { return layer.dynamicProductCarousel; })) {
+          var dynamicLayer = pLayers.find(function(layer) { return layer.dynamicProductCarousel; });
+          pLayers = pLayers.filter(function(layer) { return !layer.dynamicProductCarousel; });
+          var headlineIndex = pLayers.findIndex(function(layer) { return /^headline$/i.test(layer.layer || ''); });
+          pLayers.splice(headlineIndex + 1, 0, dynamicLayer);
+        }
+        if (nvsCopyStyle) pLayers = sortNvsStoreCarouselLayers(pLayers);
+        // Enforce NSP semantic order at the final rendering boundary. This is
+        // intentionally after consolidation, panel grouping and asset merges.
+        if (copyStyleMode === 'nsp') pLayers = sortNspCopyLayers(pLayers);
+
+        // Panel heading (P1, P2 etc.) — only if panel tag exists
+        if (pKey !== '__none__' && pKey !== '__email_metadata__') {
+          body += '<w:p><w:pPr><w:spacing w:before="280" w:after="'+(nvsCopyStyle ? '240' : '40')+'"/></w:pPr>' +
+            '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:color w:val="000000"/><w:sz w:val="'+(nvsCopyStyle ? '22' : '20')+'"/></w:rPr>' +
+            '<w:t>'+esc(pKey)+'</w:t></w:r></w:p>';
+        } else if (p > 0) {
+          // Space before unpanelled group if it's not the first group
+          body += '<w:p><w:pPr><w:spacing w:before="160" w:after="0"/></w:pPr></w:p>';
+        }
+
+          var currentAssetGroup = null;
+          for (var k2 = 0; k2 < pLayers.length; k2++) {
+          var ly    = pLayers[k2];
+
+          if (ly.dynamicProductCarousel) {
+            body += '<w:p><w:pPr><w:spacing w:before="0" w:after="40"/></w:pPr>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:sz w:val="22"/></w:rPr>' +
+              '<w:t>- Dynamic Product Carousel -</w:t></w:r></w:p>';
+            continue;
+          }
+
+          // [ASSET] layer — blue line
+          if (ly.isAsset) {
+            if (!ly.assetGroup) currentAssetGroup = null;
+            if (nvsCopyStyle && ly.assetGroup && ly.assetGroup !== currentAssetGroup) {
+              currentAssetGroup = ly.assetGroup;
+              body += '<w:p><w:pPr><w:spacing w:before="240" w:after="100"/></w:pPr>' +
+                '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:color w:val="000000"/><w:sz w:val="22"/></w:rPr>' +
+                '<w:t>'+esc(currentAssetGroup)+'</w:t></w:r></w:p>';
+            }
+            // If asset label is wrapped in [brackets], display as <label>
+            var displayLabel = nvsCopyStyle
+              ? getNvsCarouselAssetDisplayLabel(ly)
+              : ly.assetLabel.replace(/^\[(.+)\]$/, '<$1>');
+            body += '<w:p><w:pPr><w:spacing w:before="'+(nvsCopyStyle ? '240' : '0')+'" w:after="'+(nvsCopyStyle ? '240' : '60')+'"/></w:pPr>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:color w:val="'+(nvsCopyStyle ? '0000FF' : '1155CC')+'"/><w:sz w:val="22"/></w:rPr>' +
+              '<w:t>ASSET: '+esc(displayLabel)+'</w:t></w:r></w:p>';
+            if (nvsCopyStyle && isNvsDefaultCarouselAsset(ly)) {
+              body += '<w:p><w:pPr><w:spacing w:before="0" w:after="240"/></w:pPr>' +
+                '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:i/><w:color w:val="434343"/><w:sz w:val="22"/></w:rPr>' +
+                '<w:t>NOTE: Default image</w:t></w:r></w:p>';
+            }
+            continue;
+          }
+
+          // A divider in a shipping/service tout is a visual separator, not
+          // unresolved copy. Keep its label clean, as in the approved format.
+          if (/^divider line$/i.test(ly.layer || '')) {
+            body += '<w:p><w:pPr><w:spacing w:before="0" w:after="60"/></w:pPr>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:i/><w:sz w:val="22"/></w:rPr>' +
+              '<w:t>Divider Line</w:t></w:r></w:p>';
+            continue;
+          }
+
+          if (ly.placeholder) {
+            // Yellow highlight + italic "Nike to confirm"
+            body += '<w:p><w:pPr><w:spacing w:before="0" w:after="40"/></w:pPr>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:sz w:val="22"/></w:rPr>' +
+              '<w:t xml:space="preserve">'+esc(ly.layer)+': </w:t></w:r>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:i/><w:sz w:val="22"/>' +
+              '<w:highlight w:val="yellow"/></w:rPr>' +
+              '<w:t>Nike to confirm</w:t></w:r></w:p>';
+          } else {
+            var storeXml = storeParagraphsXml(ly);
+            body += storeXml || ('<w:p><w:pPr><w:spacing w:before="'+(nvsCopyStyle ? '240' : '0')+'" w:after="'+(nvsCopyStyle ? '240' : '40')+'"/></w:pPr>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/>'+(nvsCopyStyle ? '' : '<w:b/>')+'<w:sz w:val="22"/></w:rPr>' +
+              '<w:t xml:space="preserve">'+esc(ly.layer)+': </w:t></w:r>' +
+              wordTextRuns(ly.runs, ly.text) + '</w:p>');
+          }
+
+          // Every CTA requires a delivery link immediately below it. If the
+          // Figma comp already contains a [COPY] Link layer, its exact value
+          // is used; otherwise provide the approved hand-off placeholder.
+          var ctaHasLink = false;
+          var ctaUrl = ly.link || null;
+          if (/\bcta\b/i.test(ly.layer || '')) {
+            // A P5 service tout can contain several CTA/link pairs. Only
+            // inspect the layers following this CTA, stopping at the next CTA.
+            for (var linkIndex = k2 + 1; linkIndex < pLayers.length; linkIndex++) {
+              var nextLayerName = pLayers[linkIndex].layer || '';
+              if (/\bcta\b/i.test(nextLayerName)) break;
+              if (!pLayers[linkIndex].isAsset && /\blink\b/i.test(nextLayerName)) { ctaHasLink = true; break; }
+            }
+          }
+          if (/\bcta\b/i.test(ly.layer || '') && !ctaHasLink) {
+            var linkValue = ctaUrl || 'nike to confirm';
+            var linkStyle = ctaUrl
+              ? '<w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:sz w:val="22"/></w:rPr>'
+              : '<w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:i/><w:sz w:val="22"/><w:highlight w:val="yellow"/></w:rPr>';
+            body += '<w:p><w:pPr><w:spacing w:before="0" w:after="40"/></w:pPr>' +
+              '<w:r><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:sz w:val="22"/></w:rPr>' +
+              '<w:t xml:space="preserve">Link: </w:t></w:r>' +
+              '<w:r>'+linkStyle+'<w:t>'+esc(linkValue)+'</w:t></w:r></w:p>';
+          }
+        }
+      }
+      // Spacer between frames
+      body += '<w:p><w:pPr><w:spacing w:before="0" w:after="160"/></w:pPr></w:p>';
+  }
+
+  var docXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'+(nvsCopyStyle ? ' xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"' : '')+'>' +
+    '<w:body>'+body+
+    '<w:sectPr><w:pgSz w:w="11909" w:h="16834"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720"/></w:sectPr>' +
+    '</w:body></w:document>';
+
+  var stylesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+    '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter" w:cs="Inter"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults>' +
+    '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:sz w:val="22"/></w:rPr></w:style>' +
+    '<w:style w:type="paragraph" w:styleId="H1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr>'+(nvsCopyStyle ? '<w:keepNext/>' : '')+'<w:spacing w:before="'+(nvsCopyStyle ? '0' : '320')+'" w:after="80"/></w:pPr><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:color w:val="'+(nvsCopyStyle ? '434343' : '000000')+'"/><w:sz w:val="28"/></w:rPr></w:style>' +
+    '<w:style w:type="paragraph" w:styleId="H2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="'+(nvsCopyStyle ? '360' : '240')+'" w:after="80"/></w:pPr><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:sz w:val="'+(nvsCopyStyle ? '34' : '24')+'"/><w:u w:val="'+(nvsCopyStyle ? 'none' : 'single')+'"/></w:rPr></w:style>' +
+    (nvsCopyStyle ? '<w:style w:type="paragraph" w:styleId="H3"><w:name w:val="heading 3"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="280" w:after="240"/></w:pPr><w:rPr><w:rFonts w:ascii="Inter" w:hAnsi="Inter"/><w:b/><w:color w:val="000000"/><w:sz w:val="26"/></w:rPr></w:style>' : '') +
+    '</w:styles>';
+
+  var ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+    '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+    '</Types>';
+
+  var rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+    '</Relationships>';
+
+  var wRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+    '</Relationships>';
+
+  return fflate.zipSync({
+    '[Content_Types].xml':          fflate.strToU8(ct),
+    '_rels/.rels':                  fflate.strToU8(rels),
+    'word/document.xml':            fflate.strToU8(docXml),
+    'word/_rels/document.xml.rels': fflate.strToU8(wRels),
+    'word/styles.xml':              fflate.strToU8(stylesXml)
+  });
+}
+
+// ── ZIP builder (outer delivery ZIP) with real timestamp ──
+function dosDateTime() {
+  var d  = new Date();
+  var dt = ((d.getFullYear()-1980)<<9|(d.getMonth()+1)<<5|d.getDate());
+  var tm = (d.getHours()<<11|d.getMinutes()<<5|(d.getSeconds()>>1));
+  return { date: dt, time: tm };
+}
+function u16(n){return[n&0xff,(n>>8)&0xff]}
+function u32(n){return[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]}
+function strBytes(s){
+  var b=[];
+  for(var i=0;i<s.length;i++){
+    var c=s.charCodeAt(i);
+    if(c<128)b.push(c);
+    else if(c<2048){b.push(192|(c>>6));b.push(128|(c&63));}
+    else{b.push(224|(c>>12));b.push(128|((c>>6)&63));b.push(128|(c&63));}
+  }
+  return b;
+}
+var CRC32_TABLE=(function(){
+  var t=new Uint32Array(256);
+  for(var i=0;i<256;i++){var c=i;for(var j=0;j<8;j++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);t[i]=c>>>0;}
+  return t;
+})();
+function crc32(data){
+  var crc=0xffffffff;
+  for(var k=0;k<data.length;k++)crc=CRC32_TABLE[(crc^data[k])&0xff]^(crc>>>8);
+  return(crc^0xffffffff)>>>0;
+}
+function asUint8Array(data){return data instanceof Uint8Array?data:new Uint8Array(data)}
+function joinByteParts(parts,total){
+  var output=new Uint8Array(total),position=0;
+  for(var i=0;i<parts.length;i++){var part=asUint8Array(parts[i]);output.set(part,position);position+=part.length;}
+  return output;
+}
+function buildZip(files){
+  var ts=dosDateTime();
+  var parts=[],central=[],offset=0,centralSize=0;
+  for(var f=0;f<files.length;f++){
+    var file=files[f];
+    var nb=asUint8Array(strBytes(file.path));
+    var db=asUint8Array(file.bytes);
+    var crc=crc32(db);var sz=db.length;
+    var lhHead=[0x50,0x4b,0x03,0x04].concat(u16(20),u16(0),u16(0),u16(ts.time),u16(ts.date),u32(crc),u32(sz),u32(sz),u16(nb.length),u16(0));
+    var ceHead=[0x50,0x4b,0x01,0x02].concat(u16(20),u16(20),u16(0),u16(0),u16(ts.time),u16(ts.date),u32(crc),u32(sz),u32(sz),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset));
+    var directory=joinByteParts([ceHead,nb],ceHead.length+nb.length);
+    parts.push(asUint8Array(lhHead),nb,db);central.push(directory);offset+=lhHead.length+nb.length+db.length;centralSize+=directory.length;
+  }
+  var eocd=asUint8Array([0x50,0x4b,0x05,0x06].concat(u16(0),u16(0),u16(files.length),u16(files.length),u32(centralSize),u32(offset),u16(0)));
+  return joinByteParts(parts.concat(central,[eocd]),offset+centralSize+eocd.length);
+}
+
+function getSelectedCopyVariantKey(name) {
+  return String(name || '')
+    .replace(/\[?\s*\b(?:light|dark)\b\s*(?:mode)?\s*\]?/ig, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function consolidateSelectedCopyFrames(frames) {
+  var groups = {}, order = [];
+  frames.forEach(function(frame) {
+    var key = frame.channel + '::' + getSelectedCopyVariantKey(frame.name);
+    if (!groups[key]) {
+      groups[key] = {
+        frameName: frame.name,
+        cleanLabel: frame.name,
+        channel: frame.channel,
+        phase: '',
+        copyType: '',
+        market: '',
+        layers: []
+      };
+      order.push(key);
+    }
+    var target = groups[key];
+    var layerKeys = {};
+    target.layers.forEach(function(layer) {
+      layerKeys[(layer.panel || '') + '::' + (layer.layer || '') + '::' + (layer.text || '')] = true;
+    });
+    frame.layers.forEach(function(layer) {
+      var layerKey = (layer.panel || '') + '::' + (layer.layer || '') + '::' + (layer.text || '');
+      if (!layerKeys[layerKey]) { target.layers.push(layer); layerKeys[layerKey] = true; }
+    });
+  });
+  return order.map(function(key) { return groups[key]; });
+}
+
+function cleanSelectedCopyFilename(value) {
+  return String(value || '').replace(/[\/\\:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function exportSelectedCopyZip() {
+  var selected = S.selectedCopyFrames.filter(function(frame) { return S.selSelectedCopy[frame.id]; });
+  if (!selected.length) { alert('Select at least one copy frame.'); return; }
+  var unresolved = selected.filter(function(frame) { return frame.channel === 'Unclassified'; });
+  if (unresolved.length) { alert('Assign a channel to every included frame before exporting.'); return; }
+
+  var date = document.getElementById('export-date').value.trim();
+  var code = document.getElementById('campaign-code').value.trim().replace(/[\[\]]/g, '');
+  var project = document.getElementById('project-name').value.trim();
+  if (!project) { alert('Enter a project name in Setup first.'); return; }
+  var identity = [date, code ? '[' + code + '] ' + project : project].filter(Boolean).join('_');
+  var channels = ['Nike Email', 'Retailors Email', 'Nike App'];
+  selected.forEach(function(frame) {
+    if (channels.indexOf(frame.channel) === -1) channels.push(frame.channel);
+  });
+
+  var files = [];
+  channels.forEach(function(channel) {
+    var channelFrames = selected.filter(function(frame) { return frame.channel === channel; });
+    if (!channelFrames.length) return;
+    var copyFrames = consolidateSelectedCopyFrames(channelFrames);
+    var docName = cleanSelectedCopyFilename(identity + '_' + channel + '_Copy') + '.docx';
+    files.push({ path: docName, bytes: buildDocxBytes(copyFrames, project, date, code, '', 'selected') });
+  });
+  if (!files.length) { alert('No channel documents could be generated.'); return; }
+
+  document.getElementById('prog-blk').style.display = 'block';
+  document.getElementById('prog-txt').textContent = 'Building copy ZIP…';
+  document.getElementById('prog-lbl').textContent = files.length + '/' + files.length;
+  document.getElementById('prog-fi').style.width = '100%';
+  var zipBytes = buildZip(files);
+  var blob = new Blob([zipBytes], { type: 'application/zip' });
+  var url = URL.createObjectURL(blob);
+  var anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = cleanSelectedCopyFilename(identity + '_Copy') + '.zip';
+  document.body.appendChild(anchor); anchor.click(); document.body.removeChild(anchor);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+
+  document.getElementById('prog-blk').style.display = 'none';
+  document.getElementById('res-blk').style.display = 'block';
+  document.getElementById('res-title').textContent = '✓ Copy ZIP downloaded';
+  document.getElementById('res-list').innerHTML = files.map(function(file) {
+    return '<div class="ri"><div class="dot dg"></div><div class="ri-f">Copy/</div><div class="ri-n">'+esc(file.path)+'</div></div>';
+  }).join('');
+  var notice = document.getElementById('res-notice');
+  notice.style.display = 'block'; notice.className = 'notice ns';
+  notice.textContent = files.length + ' channel document' + (files.length === 1 ? '' : 's') + ' exported from ' + selected.length + ' selected frame' + (selected.length === 1 ? '' : 's') + '.';
+  updateBtn();
+}
+
+function consolidateCopyForDelivery(copyData) {
+  var groups = {}, order = [];
+  for (var i = 0; i < copyData.length; i++) {
+    var frame = copyData[i];
+    var channel = frame.channel || 'Nike App';
+    var label = (frame.cleanLabel || '').toLowerCase();
+    var groupKey = channel + '::' + label;
+    var outputLabel = frame.cleanLabel;
+    if (channel === 'Nike App' && /push notification|inbox/.test(label)) {
+      groupKey = 'Nike App::push-and-inbox';
+      outputLabel = 'Push Notification & Inbox';
+    }
+    if (channel === 'Nike Email' && /light mode|dark mode/.test(label)) {
+      groupKey = 'Nike Email::email';
+      outputLabel = 'Nike Email';
+    }
+    groupKey = (frame.phase || '') + '::' + (frame.copyType || '') + '::' + groupKey;
+    if (!groups[groupKey]) {
+      groups[groupKey] = { frameName: frame.frameName, cleanLabel: outputLabel, layers: [], channel: channel, phase: frame.phase || '', copyType: frame.copyType || '', market: frame.market || '' };
+      order.push(groupKey);
+    }
+    var target = groups[groupKey];
+    var isFirstFrameInGroup = target.layers.length === 0;
+    var layerKeys = {};
+    for (var a = 0; a < target.layers.length; a++) {
+      var existing = target.layers[a];
+      layerKeys[(existing.panel || '') + '::' + (existing.isAsset ? existing.assetLabel : existing.layer).toLowerCase()] = true;
+    }
+    for (var b = 0; b < frame.layers.length; b++) {
+      var layer = frame.layers[b];
+      var layerKey = (layer.panel || '') + '::' + (layer.isAsset ? layer.assetLabel : layer.layer).toLowerCase();
+      // Preserve repeated CTA/link layers from the first source frame (P5),
+      // while de-duplicating only when combining the second mode/channel comp.
+      if (isFirstFrameInGroup || !layerKeys[layerKey]) { target.layers.push(layer); layerKeys[layerKey] = true; }
+    }
+  }
+  return order.map(function(key) { return groups[key]; });
+}
+
+// NSP email comps may position an eyebrow separately from the body layout.
+// The delivery document follows semantic email order within each panel while
+// preserving canvas order between repeated fields such as Body copy.
+function sortNspCopyLayers(layers) {
+  return layers.map(function(layer, index) {
+    return { layer: layer, index: index };
+  }).sort(function(a, b) {
+    if (a.layer.isAsset !== b.layer.isAsset) return a.layer.isAsset ? -1 : 1;
+    var ay = Number.isFinite(a.layer.y) ? a.layer.y : a.index;
+    var by = Number.isFinite(b.layer.y) ? b.layer.y : b.index;
+    return ay - by || a.index - b.index;
+  }).map(function(item) { return item.layer; });
+}
+
+function sortNspCopyForDelivery(copyGroups) {
+  return copyGroups.map(function(group) {
+    var byPanel = {}, panelOrder = [];
+    group.layers.forEach(function(layer) {
+      var panel = layer.panel || '';
+      if (!byPanel[panel]) { byPanel[panel] = []; panelOrder.push(panel); }
+      byPanel[panel].push(layer);
+    });
+    group.layers = [];
+    panelOrder.forEach(function(panel) { group.layers = group.layers.concat(sortNspCopyLayers(byPanel[panel])); });
+    return group;
+  });
+}
+
+// ── Assemble and download ZIP ─────────────────
+function tryZip() {
+  if (!pendingResults) return;
+  if (!copyReceived) return; // wait for copy result or skip confirmation
+
+  var results = pendingResults; pendingResults = null;
+  var date = document.getElementById('export-date').value.trim();
+  var code = document.getElementById('campaign-code').value.trim();
+  var proj = document.getElementById('project-name').value.trim();
+
+  var zipFiles = [];
+  var ok = 0, fail = 0, placeholders = 0, placeholderNames = [];
+  var actualOutputPaths = {};
+
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    if (r.success) {
+      r.filename = getUniqueResultFilename(r.filename, r.subfolder, actualOutputPaths);
+      zipFiles.push({ path: r.subfolder + '/' + r.filename, bytes: r.bytes });
+      if (r.isPlaceholder) {
+        placeholders++;
+        if (r.intendedGifFilename) placeholderNames.push(r.intendedGifFilename);
+      }
+      else ok++;
+    } else { fail++; }
+  }
+
+  if (pendingCopy && pendingCopy.length > 0) {
+    var cStr = code ? '['+code+']' : '';
+    var safeProjDoc = proj.replace(/[\/\\:*?"<>|]/g, '');
+    var deliveryName = (S.compsFrames[0] || S.slicesFrames[0] || {}).deliveryName || 'Delivery';
+    var deliveryCopy = consolidateCopyForDelivery(pendingCopy);
+    var selectedExportFrame = S.compsFrames.filter(function(frame) { return S.selComps[frame.id]; })[0] ||
+      S.slicesFrames.filter(function(frame) { return S.selSlices[frame.id]; })[0] || {};
+    if (selectedExportFrame.fileSetup === 'mid-season-promo') {
+      var midSeasonCopyPaths = {};
+      getCopyFallbackFrames(S.compsFrames, S.slicesFrames, S.selComps, S.selSlices).forEach(function(frame) {
+        frame.midSeasonOutputRoot = getMidSeasonPhaseFolderLabel(frame.phase, document.getElementById('mid-season-folder-label').value);
+        frame.midSeasonDeliveryLabel = getMidSeasonDeliveryLabel(frame.phase, frame.midSeasonOutputRoot);
+        var copyGroupParts = String(frame.midSeasonCopyGroup || '').split('/').map(function(part) { return part.trim(); }).filter(Boolean);
+        var copyPathRoot = getMidSeasonCopyPath(frame);
+        if (midSeasonCopyPaths[copyPathRoot]) return;
+        midSeasonCopyPaths[copyPathRoot] = true;
+        var groupCopy = deliveryCopy.filter(function(copyFrame) {
+          return copyFrame.phase === frame.phase && copyFrame.channel === frame.channel &&
+            (!copyFrame.copyType || copyFrame.copyType === frame.midSeasonCopyGroup);
+        });
+        if (!groupCopy.length) return;
+        var copyIdentity = getMidSeasonCopyIdentity(frame, code, safeProjDoc);
+        zipFiles.push({ path: copyPathRoot + '/' + copyIdentity.filename, bytes: buildDocxBytes(groupCopy, copyIdentity.title, date, '', '', 'mid-season') });
+      });
+    } else if (selectedExportFrame.fileSetup === 'targeted-comms') {
+      var destinations = getTargetedCopyDestinations(S.compsFrames, S.selComps);
+      var copyPaths = {};
+      destinations.forEach(function(destination) {
+        var destinationSourceCopy = pendingCopy.filter(function(frame) {
+          return (frame.phase || '') === destination.phase &&
+            getNvsChannelFolder(frame.channel) === destination.type &&
+            (!destination.market || !frame.market || frame.market === destination.market);
+        });
+        var destinationCopy = consolidateCopyForDelivery(destinationSourceCopy);
+        var docName = getTargetedCopyFilename(destination, code, safeProjDoc);
+        var copyPath = getTargetedCopyPath(destination, docName);
+        if (copyPaths[copyPath]) return;
+        copyPaths[copyPath] = true;
+        var docBytes = buildDocxBytes(destinationCopy, proj, date, code, deliveryName, 'nvs');
+        zipFiles.push({ path: copyPath, bytes: docBytes });
+      });
+    } else if (selectedExportFrame.fileSetup === 'nsp-store-appearance') {
+      var nspCopyPaths = {};
+      getCopyFallbackFrames(S.compsFrames, S.slicesFrames, S.selComps, S.selSlices).forEach(function(frame) {
+        // NSP delivery copy is supplied for Nike Email only. Retailors Email
+        // is a comp-only handoff and must not create an RTL Copy folder.
+        // Manual NSP files additionally deliver the visible CXP comp copy.
+        if (!shouldCreateNspCopy(frame)) return;
+        var frameCopy = sortNspCopyForDelivery(consolidateCopyForDelivery(pendingCopy.filter(function(copyFrame) {
+          return copyFrame.phase === frame.phase && copyFrame.channel === frame.channel;
+        })));
+        if (!frameCopy.length) return;
+        var nspEmailBranch = frame.channel === 'Nike Email' ? ['Email', 'Nike'] :
+          (frame.channel === 'Retailors Email' ? ['Email', 'RTL'] : [frame.channel]);
+        var nspDocName = [code ? '[' + code.replace(/[\[\]]/g, '') + ']' : null, proj, frame.nspStore, frame.channel, 'Copy'].filter(Boolean).join('_').replace(/[\/\\:*?"<>|]/g, '') + '.docx';
+        var nspCopyPath = frame.nspManual
+          ? [frame.channel, 'Copy', nspDocName].join('/')
+          : [frame.nspStore].concat(nspEmailBranch, ['Copy', nspDocName]).filter(Boolean).join('/');
+        if (nspCopyPaths[nspCopyPath]) return;
+        nspCopyPaths[nspCopyPath] = true;
+        zipFiles.push({ path: nspCopyPath, bytes: buildDocxBytes(frameCopy, proj, date, code, frame.phase, 'nsp') });
+      });
+    } else {
+      var retentionCopyDocName = getRetentionCopyDocName(sourceFigmaFileName, code, proj);
+      ['Nike App', 'Nike Email'].forEach(function(channel) {
+        var channelCopy = deliveryCopy.filter(function(frame) { return (frame.channel || 'Nike App') === channel; });
+        if (!channelCopy.length) return;
+        var retentionDocBytes = buildDocxBytes(channelCopy, proj, date, code, deliveryName);
+        zipFiles.push({ path: deliveryName + '/' + channel + '/Copy/' + retentionCopyDocName, bytes: retentionDocBytes });
+      });
+    }
+  }
+  pendingCopy = null;
+
+  var selectedNspMotion = S.compsFrames.concat(S.slicesFrames).filter(function(frame) {
+    return (S.selComps[frame.id] || S.selSlices[frame.id]) && frame.fileSetup === 'nsp-store-appearance' && frame.channel === 'Social Motion';
+  });
+  var usedNspMotionNames = {};
+  selectedNspMotion.forEach(function(motionFrame) {
+    var motionFolder = getSubfolder(motionFrame, 1);
+    var rawMotionLabel = cleanTargetedFilenameLabel(motionFrame.label || motionFrame.name);
+    var motionLabel = /tiktok/i.test(rawMotionLabel) ? 'TikTok' : 'IG-FB Story';
+    var motionName = [date || null, code ? '[' + code.replace(/[\[\]]/g, '') + ']' : null, proj,
+      motionFrame.nspStore, 'Social', '[' + motionLabel + ']', '1080x1920'].filter(Boolean).join('_').replace(/[\/\\:*?"<>|]/g, '') + '.mp4';
+    if (usedNspMotionNames[motionName]) return;
+    usedNspMotionNames[motionName] = true;
+    var motionNote = 'MP4 REQUIRED\n\nExport the approved ' + motionLabel + ' 1080x1920 video from Figma and place it here as:\n' + motionName + '\n\nNo still image was exported.';
+    zipFiles.push({ path: motionFolder + '/[MP4 TO BE EXPORTED] ' + motionName + '.txt', bytes: fflate.strToU8(motionNote) });
+  });
+
+  var selectedPromoUtilityComp = S.compsFrames.filter(function(frame) {
+    return shouldBundleMidSeasonUtilityIcons(frame, S.selComps);
+  })[0];
+  if (selectedPromoUtilityComp) {
+    var iconRoot = getMidSeasonPhaseFolderLabel(selectedPromoUtilityComp.phase, document.getElementById('mid-season-folder-label').value);
+    var iconFolder = [iconRoot, 'Nike Email', 'Slices', 'Utility Benefits Icons'].join('/');
+    getMidSeasonBundledUtilityIcons().forEach(function(icon) {
+      var iconPath = iconFolder + '/' + icon.filename;
+      if (!actualOutputPaths[iconPath]) {
+        actualOutputPaths[iconPath] = true;
+        zipFiles.push({ path: iconPath, bytes: icon.bytes });
+      }
+    });
+  }
+
+  var selectedMetaStory = S.compsFrames.concat(S.slicesFrames).filter(function(frame) {
+    return (S.selComps[frame.id] || S.selSlices[frame.id]) && frame.fileSetup === 'mid-season-promo' && frame.channel === 'Paid Media' && /Meta Story|1080\s*x\s*1920/i.test(frame.name || frame.midSeasonFilename || '');
+  })[0];
+  if (selectedMetaStory) {
+    var storyFolder = getSubfolder(selectedMetaStory, 1);
+    var mp4Reminder = getMidSeasonMp4Reminder(selectedMetaStory, date, code, proj);
+    zipFiles.push({ path: storyFolder + '/' + mp4Reminder.filename, bytes: fflate.strToU8(mp4Reminder.text) });
+  }
+
+  if (!zipFiles.length) {
+    document.getElementById('prog-blk').style.display = 'none';
+    document.getElementById('res-blk').style.display  = 'block';
+    document.getElementById('res-list').innerHTML = '<div style="color:var(--red);font-size:10px;padding:8px">No files exported.</div>';
+    updateBtn(); return;
+  }
+
+  document.getElementById('prog-txt').textContent = 'Building ZIP…';
+  var zipStartedAt = Date.now();
+  var zipBytes = buildZip(zipFiles);
+  exportTimings.zipMs = Date.now() - zipStartedAt;
+  var blob = new Blob([zipBytes], { type: 'application/zip' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  var firstExportFrame = S.compsFrames[0] || S.slicesFrames[0] || {};
+  var deliveryZipName = firstExportFrame.fileSetup === 'mid-season-promo'
+    ? getMidSeasonPhaseFolderLabel(firstExportFrame.phase, document.getElementById('mid-season-folder-label').value)
+    : (firstExportFrame.fileSetup === 'nsp-store-appearance' ? (firstExportFrame.nspManual ? sourceFigmaFileName.replace(/[\[\]]/g, '') : (firstExportFrame.nspStore || proj)) :
+      (firstExportFrame.deliveryName || (firstExportFrame.fileSetup === 'targeted-comms' ? proj : 'Delivery')));
+  var safeDeliveryZip = deliveryZipName.replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, ' ').trim();
+  a.download = safeDeliveryZip + '.zip';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+
+  document.getElementById('prog-blk').style.display = 'none';
+  document.getElementById('res-blk').style.display  = 'block';
+  exportTimings.totalMs = exportStartedAt ? Date.now() - exportStartedAt : 0;
+  document.getElementById('res-title').textContent = '✓ ZIP downloaded';
+  console.log('Export timings', exportTimings);
+  updateBtn();
+
+  var html = '';
+  for (var j = 0; j < results.length; j++) {
+    var res    = results[j];
+    var dotCls = res.success ? (res.isPlaceholder ? 'da' : 'dg') : 'dr';
+    html += '<div class="ri"><div class="dot '+dotCls+'"></div>' +
+      '<div class="ri-f">'+(res.subfolder||'—')+'/</div>' +
+      '<div class="ri-n">'+(res.filename||res.frameName)+'</div></div>';
+  }
+  document.getElementById('res-list').innerHTML = html;
+
+  var n = document.getElementById('res-notice');
+  n.style.display = 'block'; n.className = 'notice ns';
+  var nmsg = ok + ' file'+(ok!==1?'s':'')+' exported';
+  if (placeholders) {
+    nmsg += ' · ' + placeholders + ' GIF replacement'+(placeholders!==1?'s':'')+' required';
+    if (placeholderNames.length) nmsg += ': replace the annotated JPG with ' + placeholderNames.join(', ');
+  }
+  if (fail) nmsg += ' · ' + fail + ' failed';
+  nmsg += '. ZIP downloaded to your Downloads folder.';
+  n.textContent = nmsg;
+}
+
+document.getElementById('close-btn').addEventListener('click', function() {
+  parent.postMessage({ pluginMessage: { type: 'CLOSE' } }, '*');
+});
+document.getElementById('clear-btn').addEventListener('click', function() {
+  document.getElementById('res-blk').style.display = 'none';
+});
+
+parent.postMessage({ pluginMessage: { type: 'SCAN_PAGES' } }, '*');
+updatePreview();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "figma-bulk-resize",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "@figma/plugin-typings": "^1.121.0",
+    "typescript": "^5.9.0"
+  }
+}

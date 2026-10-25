@@ -1,0 +1,65 @@
+name: Build and release plugins
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            plugins/component-setup/package-lock.json
+            plugins/bulk-resize/package-lock.json
+      - name: Build and check Component Setup
+        working-directory: plugins/component-setup
+        run: |
+          npm ci
+          npm run build
+          npm run typecheck
+          npm test
+      - name: Build and check Bulk Resize
+        working-directory: plugins/bulk-resize
+        run: |
+          npm ci
+          npm run build
+          npm test
+      - name: Check Delivery Export
+        working-directory: plugins/delivery-export
+        run: npm test
+      - name: Package and verify extracted plugins
+        run: node scripts/package-plugins.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tundra-plugin-packages
+          path: releases/*.zip
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tundra-plugin-packages
+          path: releases
+      - name: Publish release downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" releases/*.zip --verify-tag --title "Tundra plugins $RELEASE_TAG" --generate-notes
