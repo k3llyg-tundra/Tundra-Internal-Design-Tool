@@ -40,6 +40,9 @@ try {
       (_, target) => `](${github}${relative(root, resolve(source, target)).split(sep).join('/')})`
     );
     await writeFile(join(directory, 'README.md'), guide);
+    if (slug === 'delivery-export') {
+      await cp(join(source, 'vendor-licenses'), join(directory, 'vendor-licenses'), { recursive: true });
+    }
     if (slug === 'bulk-resize') {
       await cp(join(source, 'src/vendor/fflate-LICENSE.txt'), join(directory, 'fflate-LICENSE.txt'));
     }

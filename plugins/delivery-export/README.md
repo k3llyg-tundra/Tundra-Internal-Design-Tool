@@ -1,6 +1,6 @@
 # Delivery Export
 
-Resolve, preview, and export campaign delivery files from structured Figma sources. Outputs include slices, comps, GIF source files when available, and Word copy documents, packaged in a ZIP. The supplied UI identifies itself as v49.
+Resolve, preview, and export campaign delivery files from structured Figma sources. Outputs include slices, comps, GIF source files when available, and Word copy documents, packaged in a ZIP. The supplied UI identifies itself as v50.2.
 
 [Download ZIP](https://github.com/k3llyg-tundra/Tundra-Internal-Design-Tool/releases/latest/download/delivery-export.zip) · [Install or update](../../docs/installation.md)
 
@@ -29,11 +29,11 @@ Output paths and naming depend on the selected setup, channel, source names, dat
 
 ## GIFs and limitations
 
-When the plugin finds a supported visible uploaded GIF source, it exports the original GIF bytes. This does not render arbitrary Figma animation into a new GIF or guarantee a composed GIF with other overlaid artwork.
+When the plugin finds a supported visible uploaded GIF source, it exports the original GIF bytes by default. Retention slices are checked for uploaded GIFs during scanning, even when their frame is not tagged `[GIF]`. Select Tiny GIF in Setup to re-encode toward a 500 KB target; this target is not guaranteed for every animation. This does not render arbitrary Figma animation into a new GIF or guarantee a composed GIF with other overlaid artwork.
 
 If an original GIF cannot be recovered, the plugin creates a JPG placeholder marked **GIF TO BE EXPORTED** and reports a replacement is required. Replace those placeholders with the final animation before delivery. Retention GIF heroes can also produce a separate still image.
 
-The UI loads **fflate 0.8.2** from `cdn.jsdelivr.net` to prepare ZIP output. Network access to that CDN is required; this version is not fully offline. Keep the existing dependency behavior when maintaining this initial import.
+Word and GIF processing libraries are bundled with the plugin and work without a CDN connection. The Tiny GIF option attempts to preserve frames and timing while reducing size; review the result before delivery. Retention email copy also reads visible semantic text in supported library text blocks and groups it by panel.
 
 ## Troubleshooting
 
@@ -41,7 +41,7 @@ The UI loads **fflate 0.8.2** from `cdn.jsdelivr.net` to prepare ZIP output. Net
 - Incorrect folders or filenames: correct campaign details and source naming, then check the preview again.
 - Missing copy: check tagged text and selected frames, and inspect the generated documents before delivery.
 - Slow scans: restrict the scan to the intended page or phase rather than a large all-phase review area.
-- ZIP errors: verify network access to the CDN, reopen the plugin, and retry a smaller selection.
+- ZIP errors: reopen the plugin and retry a smaller selection; confirm the downloaded archive contains the expected files.
 
 ## Development
 

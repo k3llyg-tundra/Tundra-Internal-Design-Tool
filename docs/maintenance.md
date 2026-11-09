@@ -6,7 +6,7 @@ Each plugin is independent under `plugins/`. Component Setup and Bulk Resize com
 
 Write current usage instructions in each plugin README and shared installation steps in `docs/installation.md`. Keep the root tool directory short. A future internal website should consume these guides and link to GitHub release assets; do not maintain separate copies of the instructions in a website and Figma.
 
-The initial import deliberately excludes archived projects, fonts, sample artwork, backups, nested repositories, and installed dependencies. Bulk Resize retains its vendored fflate library and MIT notice. Delivery Export retains its existing CDN-loaded fflate 0.8.2 dependency.
+The initial import deliberately excludes archived projects, fonts, sample artwork, backups, nested repositories, and installed dependencies. Bulk Resize retains its vendored fflate library and MIT notice. Delivery Export bundles fflate, gifuct-js, gifenc and js-binary-schema-parser for offline export; their license notices are shipped in the package.
 
 ## Build and check
 

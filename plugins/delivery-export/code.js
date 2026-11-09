@@ -1981,6 +1981,8 @@ function getFramesOnPage(campaignPageId, role, fileSetup, options) {
       isShoppingTout:   role === 'slices' && raw[i].shoppingTout === true,
       isComp:           isComp,
       isGif:            isGif,
+      // Recover uploaded animations in Retention slices even without a GIF tag.
+      detectGif:        role === 'slices' && !isComp && !isFlexible,
       forcePng:         forcePng,
       scales:           getScales(channel, isComp, f.name, fileSetup),
       audienceParts:    audienceParts,
@@ -2346,6 +2348,17 @@ function getSelectedVisibleCopyMeta(textNode, root) {
   return { panel: getCopyPanel(name), field: field };
 }
 
+// Retention library text blocks use semantic names without [COPY] tags.
+function getRetentionVisibleCopyMeta(textNode, root, inheritedPanel) {
+  var path = getNodePathWithin(textNode, root);
+  if (/Specs?|Annotation|Email Footer|Status Bar|Global Navigation|Category Nav|Logo Header/i.test(path)) return null;
+  if (!/Text Block|Text Module|Hgroup|CTA Block|Email Doorway|Dynamic Grid/i.test(path)) return null;
+  var meta = getSelectedVisibleCopyMeta(textNode, root);
+  if (!meta) return null;
+  meta.panel = meta.panel || inheritedPanel || null;
+  return meta;
+}
+
 function getSelectedCopyChannel(node) {
   var names = [];
   var current = node;
@@ -2432,7 +2445,7 @@ function extractText(frameId, options) {
 
     function walk(n, absY, insideShoppingTout, inheritedPanel) {
       try {
-        if (options && options.includeSelectedSemanticCopy ? isHiddenForExport(n) : isUnavailableForExport(n)) return;
+        if (options && (options.includeSelectedSemanticCopy || options.includeVisibleRetentionCopy) ? isHiddenForExport(n) : isUnavailableForExport(n)) return;
         var nodeY      = absY + (typeof n.y === 'number' ? n.y : 0);
         var assetLabel = getAssetTag(n.name);
         // Panel tags are often placed on a containing frame/group rather than
@@ -2479,6 +2492,15 @@ function extractText(frameId, options) {
             seen[key] = true;
             results.push({ panel: panel, layer: field, text: n.characters, runs: getTextRuns(n), placeholder: isPlaceholder(n.characters), link: getTextHyperlink(n), isAsset: false, shoppingTout: inShoppingTout, y: nodeY });
           }
+        } else if (n.type === 'TEXT' && options && options.includeVisibleRetentionCopy && getRetentionVisibleCopyMeta(n, node, nodePanel)) {
+          var retentionMeta = getRetentionVisibleCopyMeta(n, node, nodePanel);
+          if (retentionMeta) {
+            var retentionKey = (retentionMeta.panel || 'none') + '::' + retentionMeta.field.toLowerCase() + '::' + n.id;
+            if (!seen[retentionKey]) {
+              seen[retentionKey] = true;
+              results.push({ panel: retentionMeta.panel, layer: retentionMeta.field, text: n.characters, runs: getTextRuns(n), placeholder: isPlaceholder(n.characters), link: getTextHyperlink(n), isAsset: false, y: nodeY });
+            }
+          }
         } else if (n.type === 'TEXT' && options && options.includeVisibleNvsCopy) {
           var visibleMeta = getNvsVisibleCopyMeta(n, node, context);
           if (visibleMeta) {
@@ -2521,7 +2543,16 @@ function extractText(frameId, options) {
             results.push({ panel: toutPanel, layer: toutField, text: n.characters, runs: getTextRuns(n), placeholder: false, link: getTextHyperlink(n), isAsset: false, shoppingTout: true, y: nodeY });
           }
         }
-        if (n.children) for (var i = 0; i < n.children.length; i++) walk(n.children[i], nodeY, inShoppingTout, nodePanel);
+        if (n.children) {
+          var siblingPanel = nodePanel;
+          for (var i = 0; i < n.children.length; i++) {
+            var child = n.children[i];
+            if (options && options.includeVisibleRetentionCopy && !isHiddenForExport(child)) {
+              siblingPanel = getCopyPanel(child.name) || siblingPanel;
+            }
+            walk(child, nodeY, inShoppingTout, siblingPanel);
+          }
+        }
       } catch(e) {}
     }
     walk(node, 0, false, null);
@@ -3302,6 +3333,21 @@ figma.ui.onmessage = async function(msg) {
       }
     }
     var frames = getFramesOnPage(msg.pageId, msg.role, msg.fileSetup, msg.options || {});
+    // Resolve uploaded GIF bytes before displaying the slice's export format.
+    for (var gifScanIndex = 0; gifScanIndex < frames.length; gifScanIndex++) {
+      var gifScanFrame = frames[gifScanIndex];
+      if (!gifScanFrame.detectGif || gifScanFrame.isGif || gifScanFrame.isComp) continue;
+      try {
+        var gifScanNode = await figma.getNodeByIdAsync(gifScanFrame.exportNodeId || gifScanFrame.id);
+        var gifScanSource = await findTopVisibleGifSource(gifScanNode);
+        if (gifScanSource && gifScanSource.bytes) {
+          gifScanFrame.isGif = true;
+          gifScanFrame.forcePng = false;
+        }
+      } catch (gifScanError) {
+        // Export-time detection retries sources that cannot yet be read.
+      }
+    }
     if (msg.fileSetup === 'retention-offense' && msg.role === 'slices' && !frames.length) {
       figma.ui.postMessage({ type: 'SCAN_ERROR', role: msg.role, message: 'No exportable assets found in the matching Design Space Week.' });
       return;
@@ -3337,6 +3383,7 @@ figma.ui.onmessage = async function(msg) {
         var isNspCopy = msg.fileSetup === 'nsp-store-appearance';
         var isMidSeasonCopy = msg.fileSetup === 'mid-season-promo';
         var fallbackLayers = extractText(fallbackId, {
+          includeVisibleRetentionCopy: msg.fileSetup === 'retention-offense',
           includeVisibleNvsCopy: isTargetedCopy,
           includeVisibleNspCopy: isNspCopy,
           includeVisibleMidSeasonCopy: isMidSeasonCopy,
